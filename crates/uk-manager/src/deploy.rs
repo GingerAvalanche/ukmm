@@ -47,16 +47,16 @@ fn is_symlink_to(link: &Path, dest: &Path) -> bool {
     {
         (
             junction::exists(link).unwrap_or(false) &&
-            junction::get_target(link).expect("Path does not exist") == dest
+            junction::get_target(link).unwrap_or("".into()) == dest
         ) || (
             link.is_symlink() &&
-            link.read_link().expect("Path does not exist") == dest
+            link.read_link().unwrap_or("".into()) == dest
         )
     }
     #[cfg(unix)]
     {
         link.is_symlink() &&
-        link.read_link().expect("Path does not exist") == dest
+        link.read_link().unwrap_or("".into()) == dest
     }
 }
 
