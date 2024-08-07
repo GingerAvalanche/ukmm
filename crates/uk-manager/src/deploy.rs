@@ -229,12 +229,10 @@ impl Manager {
             .expect("YIKES, the settings manager is gone");
         let settings = settings.read();
         let mut lang = Language::USen;
-        let mut profile = String::from("");
         let config = settings
             .platform_config()
             .and_then(|c| {
                 lang = c.language;
-                profile = c.profile.clone();
                 c.deploy_config.as_ref()
             })
             .context("No deployment config for current platform")?;
