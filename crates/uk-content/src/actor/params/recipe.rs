@@ -173,8 +173,8 @@ impl From<Recipe> for ParameterIO {
 }
 
 impl Mergeable for Recipe {
-    fn diff(&self, other: &Self) -> Self {
-        Self(self.0.deep_diff(&other.0))
+    fn diff(&self, _other: &Self) -> Self {
+        Self(self.0.clone())
     }
 
     fn merge(&self, diff: &Self) -> Self {
