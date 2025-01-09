@@ -112,6 +112,7 @@ pub enum Theme {
     AdwaitaLight,
     Carl,
     SweetDark,
+    ALamentforTimelessness,
 }
 
 impl Theme {
@@ -129,6 +130,7 @@ impl Theme {
             Theme::AdwaitaLight => "Adwaita Light",
             Theme::Carl => "Carl",
             Theme::SweetDark => "Sweet Dark",
+            Theme::ALamentforTimelessness => "ALamentforTimelessness",
         }
     }
 
@@ -146,6 +148,7 @@ impl Theme {
             Theme::AdwaitaLight,
             Theme::Carl,
             Theme::SweetDark,
+            Theme::ALamentforTimelessness,
         ]
         .into_iter()
     }
@@ -254,6 +257,161 @@ impl Theme {
                     ..Default::default()
                 });
             }
+
+            Self::ALamentforTimelessness => {
+                ctx.set_style(Style {
+                    animation_time: 0.2,
+                    visuals: Visuals {
+                        dark_mode: true,
+                        override_text_color: None,
+                        widgets: Widgets {
+                            noninteractive: WidgetVisuals {
+                                // 非交互式控件的背景填充颜色 - 使用深邃的暗紫色
+                                bg_fill: hex_color!("#1A1B26"), 
+                                // 非交互式控件的背景边框颜色 - 使用稍亮的紫色
+                                bg_stroke: Stroke::new(1.0, hex_color!("#353846")), 
+                                // 非交互式控件的前景描边颜色（例如文本颜色）- 使用柔和的灰蓝色
+                                fg_stroke: Stroke::new(1.0, hex_color!("#A9B1D6")), 
+                                // 圆角
+                                rounding: Rounding::same(2.0), 
+                                // 扩展
+                                expansion: 0.0,
+                                // 非交互式控件的弱背景填充颜色 - 使用更深的暗紫色
+                                weak_bg_fill: hex_color!("#16161E"), 
+                            },
+                            inactive: WidgetVisuals {
+                                // 非活动状态控件的背景填充颜色 - 使用柔和的蓝紫色
+                                bg_fill: hex_color!("#4C4F69"), 
+                                // 非活动状态控件的背景边框颜色 - 使用稍暗的蓝紫色
+                                bg_stroke: Stroke::new(1.0, hex_color!("#45475A")), 
+                                // 非活动状态控件的前景描边颜色（例如文本颜色）- 使用明亮的灰白色
+                                fg_stroke: Stroke::new(1.0, hex_color!("#CDD6F4")), 
+                                // 圆角
+                                rounding: Rounding::same(2.0), 
+                                // 扩展
+                                expansion: 0.0,
+                                // 非活动状态控件的弱背景填充颜色 - 使用较深的蓝紫色
+                                weak_bg_fill: hex_color!("#313244"), 
+                            },
+                            hovered: WidgetVisuals {
+                                // 悬停状态控件的背景填充颜色 - 使用更亮的蓝紫色
+                                bg_fill: hex_color!("#5C5F77"), 
+                                // 悬停状态控件的背景边框颜色 - 使用带有绿色调的边框色
+                                bg_stroke: Stroke::new(1.0, hex_color!("#64748B")), 
+                                // 悬停状态控件的前景描边颜色（例如文本颜色）- 使用更亮的灰白色，略带蓝色调
+                                fg_stroke: Stroke::new(1.5, hex_color!("#D9E0EE")), 
+                                // 圆角
+                                rounding: Rounding::same(3.0), 
+                                // 扩展
+                                expansion: 1.0,
+                                // 悬停状态控件的弱背景填充颜色 - 使用中等蓝紫色
+                                weak_bg_fill: hex_color!("#4C4F69"),
+                            },
+                            active: WidgetVisuals {
+                                // 活动状态控件的背景填充颜色 - 使用带有一点红色调的深紫色
+                                bg_fill: hex_color!("#6D5875"), 
+                                // 活动状态控件的背景边框颜色 - 使用带有蓝色调的边框色
+                                bg_stroke: Stroke::new(1.0, hex_color!("#748494")), 
+                                // 活动状态控件的前景描边颜色（例如文本颜色）- 使用非常明亮的米白色
+                                fg_stroke: Stroke::new(1.5, hex_color!("#FAE3B0")),
+                                // 圆角
+                                rounding: Rounding::same(2.0), 
+                                // 扩展
+                                expansion: 1.0,
+                                // 活动状态控件的弱背景填充颜色 - 使用接近活动背景的颜色
+                                weak_bg_fill: hex_color!("#5C5F77"),
+                            },
+                            open: WidgetVisuals {
+                                // 打开状态控件的背景填充颜色 - 使用一种柔和的绿色调
+                                bg_fill: hex_color!("#455A64"), 
+                                // 打开状态控件的背景边框颜色 - 使用深绿色调的边框色
+                                bg_stroke: Stroke::new(1.0, hex_color!("#37474F")), 
+                                // 打开状态控件的前景描边颜色（例如文本颜色）- 使用明亮的灰白色
+                                fg_stroke: Stroke::new(1.0, hex_color!("#ECEFF1")), 
+                                // 圆角
+                                rounding: Rounding::same(2.0), 
+                                // 扩展
+                                expansion: 0.0,
+                                // 打开状态控件的弱背景填充颜色 - 使用稍暗的绿色调
+                                weak_bg_fill: hex_color!("#37474F"),
+                            },
+                        },
+                        // 选中文本的背景颜色 - 使用带有橙色调的选区颜色
+                        selection: Selection {
+                            bg_fill: ORGANGE.linear_multiply(0.5),
+                            stroke: Stroke::new(1.0, hex_color!("#F9E2AF")),
+                        },
+                        // 超链接颜色 - 使用明亮的青色
+                        hyperlink_color: hex_color!("#89B4FA"),
+                        // 微弱可见的背景颜色 - 使用深灰色
+                        faint_bg_color: hex_color!("#242535"),
+                        // 最暗的背景颜色（例如文本编辑器的背景）- 使用接近黑色的深紫色
+                        extreme_bg_color: hex_color!("#16161E"),
+                        // 代码块的背景颜色 - 使用深灰色，与faint_bg_color相似
+                        code_bg_color: hex_color!("#242535"),
+                        // 警告文字颜色 - 使用橙色
+                        warn_fg_color: ORGANGE,
+                        // 错误文字颜色 - 使用红色
+                        error_fg_color: RED,
+                        // 窗口圆角
+                        window_rounding: Rounding::same(4.0),
+                        // 窗口阴影 - 使用柔和的黑色阴影
+                        window_shadow: Shadow {
+                            offset: egui::Vec2::new(0., 0.),
+                            blur:   5.,
+                            spread: 5.,
+                            color:  Color32::from_black_alpha(96),
+                        },
+                        // 弹出窗口阴影 - 使用更柔和的黑色阴影
+                        popup_shadow: Shadow {
+                            offset: egui::Vec2::new(0., 0.),
+                            blur:   5.,
+                            spread: 5.,
+                            color:  Color32::from_black_alpha(48),
+                        },
+                        // 窗口填充颜色 - 使用深紫色
+                        window_fill: hex_color!("#1A1B26"),
+                        // 窗口边框颜色 - 无边框
+                        window_stroke: Stroke::NONE,
+                        // 面板填充颜色 - 使用与窗口填充颜色相同的深紫色
+                        panel_fill: hex_color!("#1A1B26"),
+                        // 调整大小的角落大小
+                        resize_corner_size: 8.0,
+                        // 文本光标样式
+                        text_cursor: TextCursorStyle {
+                            preview: false,
+                            ..Default::default()
+                        },
+                        // 裁剪矩形边距
+                        clip_rect_margin: 3.0,
+                        // 按钮是否有边框
+                        button_frame: true,
+                        // 折叠标题是否有边框
+                        collapsing_header_frame: false,
+                        ..Default::default()
+                    },
+                    spacing: Spacing {
+                        // 按钮内边距
+                        button_padding: [4.0, 2.0].into(),
+                        // 图标间距
+                        icon_spacing: 4.0,
+                        // 菜单边距
+                        menu_margin: Margin::same(4.0),
+                        // 缩进是否以水平线结束
+                        indent_ends_with_horizontal_line: false,
+                        ..Default::default()
+                    },
+                    text_styles: {
+                        let mut styles = egui::style::default_text_styles();
+                        // 设置标题字体为粗体
+                        styles.get_mut(&egui::TextStyle::Heading).unwrap().family =
+                            FontFamily::Name("Bold".into());
+                        styles
+                    },
+                    ..Default::default()
+                });
+            }
+
             Self::Egui => {
                 ctx.set_visuals(egui::style::Visuals::dark());
             }
