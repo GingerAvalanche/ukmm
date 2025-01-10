@@ -1,3 +1,6 @@
+use strfmt::Format;
+use uk_content::prelude::Endian;
+
 use super::*;
 
 impl App {
@@ -246,9 +249,13 @@ impl App {
                     self.theme = theme;
                     self.dock_style = uk_ui::visuals::style_dock(&ctx.style());
                 }
+                Message::SetLanguage(lang) => {
+                    LOCALIZATION.write().update_language(&lang);
+                }
                 Message::SelectFile => {
+                    let loc = LOCALIZATION.read();
                     if let Some(mut paths) = rfd::FileDialog::new()
-                        .set_title("Select a Mod")
+                        .set_title(loc.get("Mod_Select_Title"))
                         .add_filter("Any mod (*.zip, *.7z, *.bnp, rules.txt)", &["zip", "bnp", "7z", "txt"])
                         .add_filter("UKMM Mod (*.zip)", &["zip"])
                         .add_filter("BCML Mod (*.bnp)", &["bnp"])
@@ -286,7 +293,11 @@ impl App {
                     {
                         self.do_update(Message::Error(anyhow_ext::anyhow!(
                             "Mod is for {:?}, current mode is {}",
-                            mod_.meta.platform,
+                            match mod_.meta.platform {
+                                ModPlatform::Specific(Endian::Little) => "Switch",
+                                ModPlatform::Specific(Endian::Big) => "Wii U",
+                                ModPlatform::Universal => "any console",
+                            },
                             self.platform()
                         )));
                     } else if !mod_.meta.options.is_empty() {
@@ -333,12 +344,13 @@ impl App {
                     });
                 }
                 Message::ModUpdate => {
+                    let loc = LOCALIZATION.read();
                     if let Some(file) = rfd::FileDialog::new()
-                        .set_title("Select a Mod")
-                        .add_filter("Any mod (*.zip, *.7z, *.bnp)", &["zip", "bnp", "7z"])
+                        .set_title(loc.get("Mod_Select_Title"))
+                        .add_filter("Any mod (*.zip, *.7z, *.bnp, rules.txt)", &["zip", "bnp", "7z", "txt"])
                         .add_filter("UKMM Mod (*.zip)", &["zip"])
                         .add_filter("BCML Mod (*.bnp)", &["bnp"])
-                        .add_filter("Legacy Mod (*.zip, *.7z)", &["zip", "7z"])
+                        .add_filter("Legacy Mod (*.zip, *.7z, rules.txt)", &["zip", "7z", "txt"])
                         .add_filter("All files (*.*)", &["*"])
                         .pick_file()
                     {
@@ -419,8 +431,12 @@ impl App {
                     }
                     if !err {
                         self.toasts.add({
-                            let mut toast =
-                                Toast::success(format!("Mod(s) added to profile {}", profile));
+                            let loc = LOCALIZATION.read();
+                            let message = loc.get("Profile_Added");
+                            let vars = std::collections::HashMap::from(
+                                [("profile_name".to_string(), profile.to_string())]
+                            );
+                            let mut toast = Toast::success(message.format(&vars).unwrap());
                             toast.set_duration(Some(Duration::new(2, 0)));
                             toast
                         });
@@ -489,7 +505,8 @@ impl App {
                     match save_res {
                         Ok(()) => {
                             self.toasts.add({
-                                let mut toast = Toast::success("Settings saved");
+                                let loc = LOCALIZATION.read();
+                                let mut toast = Toast::success(loc.get("Settings_Saved"));
                                 toast.set_duration(Some(Duration::new(2, 0)));
                                 toast
                             });
@@ -509,7 +526,8 @@ impl App {
                 Message::HandleSettings => {
                     self.temp_settings = self.core.settings().clone();
                     self.toasts.add({
-                        let mut toast = Toast::success("Settings saved");
+                        let loc = LOCALIZATION.read();
+                        let mut toast = Toast::success(loc.get("Settings_Saved"));
                         toast.set_duration(Some(Duration::new(2, 0)));
                         toast
                     });
@@ -598,11 +616,12 @@ impl App {
                 Message::ClosePackagingOptions => self.opt_folders = None,
                 Message::ClosePackagingDependencies => self.show_package_deps = false,
                 Message::PackageMod => {
+                    let loc = LOCALIZATION.read();
                     let mut builder = self.package_builder.borrow().clone();
                     let default_name = sanitise(&builder.meta.name) + ".zip";
                     if let Some(dest) = rfd::FileDialog::new()
                         .add_filter("UKMM Mod", &["zip"])
-                        .set_title("Save Mod Package")
+                        .set_title(loc.get("Package_Save_Title"))
                         .set_file_name(default_name)
                         .save_file()
                     {
@@ -615,8 +634,9 @@ impl App {
                     self.busy.set(false);
                 }
                 Message::ImportCemu => {
+                    let loc = LOCALIZATION.read();
                     if let Some(path) = rfd::FileDialog::new()
-                        .set_title("Select Cemu Directory")
+                        .set_title(loc.get("Settings_SelectFolder_Cemu"))
                         .pick_folder()
                     {
                         self.do_task(move |core| tasks::import_cemu_settings(&core, &path));
@@ -631,8 +651,11 @@ impl App {
                 Message::SetChangelog(msg) => self.changelog = Some(msg),
                 Message::CloseChangelog => self.changelog = None,
                 Message::OfferUpdate(version) => {
+                    let loc = LOCALIZATION.read();
+                    let message = loc.get("Update_Available");
                     self.changelog = Some(format!(
-                        "A new update is available!\n\n{}",
+                        "{}\n\n{}",
+                        message,
                         version.description()
                     ));
                     self.new_version = Some(version);
