@@ -515,7 +515,7 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
     };
     if let Some(wiiu_config) = settings.wiiu_config.as_mut() {
         wiiu_config.dump = dump;
-        let deploy_config = wiiu_config.deploy_config.get_or_insert_default();
+        let deploy_config = wiiu_config.deploy_config.get_or_insert_with(Default::default);
         deploy_config.auto = true;
         deploy_config.cemu_rules = true;
         deploy_config.output = gfx_folder.clone();

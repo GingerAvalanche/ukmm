@@ -305,7 +305,7 @@ fn render_deploy_config(config: &mut DeployConfig, platform: Platform, ui: &mut 
             ui,
             |ui| {
                 changed |= ui
-                    .file_picker_string(config.executable.get_or_insert_default())
+                    .file_picker_string(config.executable.get_or_insert_with(Default::default))
                     .changed();
             },
         );
@@ -410,7 +410,7 @@ fn render_platform_config(
                     ui,
                     |ui| {
                         if ui
-                            .folder_picker(content_dir.get_or_insert_default())
+                            .folder_picker(content_dir.get_or_insert_with(Default::default))
                             .changed()
                         {
                             changed = true;
@@ -427,7 +427,7 @@ fn render_platform_config(
                         ui,
                         |ui| {
                             if ui
-                                .folder_picker(update_dir.get_or_insert_default())
+                                .folder_picker(update_dir.get_or_insert_with(Default::default))
                                 .changed()
                             {
                                 changed = true;
@@ -446,7 +446,7 @@ fn render_platform_config(
                     &description,
                     ui,
                     |ui| {
-                        if ui.folder_picker(aoc_dir.get_or_insert_default()).changed() {
+                        if ui.folder_picker(aoc_dir.get_or_insert_with(Default::default)).changed() {
                             changed = true;
                             *host_path = "/".into();
                         }

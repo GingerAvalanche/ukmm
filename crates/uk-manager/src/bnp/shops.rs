@@ -44,8 +44,7 @@ fn merge(data: &mut ShopData, diff: &ParameterList) -> Result<()> {
         .iter_by_name()
     {
         let name: String64 = name.expect("Bad shop diff").as_ref().into();
-        #[allow(unstable_name_collisions)]
-        let base = data.0.entry(name).or_default().get_or_insert_default();
+        let base = data.0.entry(name).or_default().get_or_insert_with(Default::default);
         for (i, (name, params)) in table.objects.iter_by_name().enumerate() {
             let name: String64 = name
                 .ok()
