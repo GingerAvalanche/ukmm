@@ -95,32 +95,45 @@ impl LocLang {
 
 pub struct Localization<'a> {
     pub language: LocLang,
-    strings: DashMap<&'a str, Cow<'a, str>>
+    strings: DashMap<&'a str, Cow<'a, str>>,
 }
 
 impl<'a> From<LocLang> for Localization<'a> {
     fn from(value: LocLang) -> Self {
         Self {
             strings: match value {
-                LocLang::English => serde_json::from_str(&EN).expect("Invalid English localization"),
+                LocLang::English => {
+                    serde_json::from_str(&EN).expect("Invalid English localization")
+                }
                 LocLang::Dutch => serde_json::from_str(&NL).expect("Invalid Dutch localization"),
                 LocLang::French => serde_json::from_str(&FR).expect("Invalid French localization"),
                 LocLang::German => serde_json::from_str(&DE).expect("Invalid German localization"),
-                LocLang::Italian => serde_json::from_str(&IT).expect("Invalid Italian localization"),
-                LocLang::Japanese => serde_json::from_str(&JA).expect("Invalid Japanese localization"),
+                LocLang::Italian => {
+                    serde_json::from_str(&IT).expect("Invalid Italian localization")
+                }
+                LocLang::Japanese => {
+                    serde_json::from_str(&JA).expect("Invalid Japanese localization")
+                }
                 LocLang::Korean => serde_json::from_str(&KO).expect("Invalid Korean localization"),
-                LocLang::Russian => serde_json::from_str(&RU).expect("Invalid Russian localization"),
-                LocLang::SimpleChinese => serde_json::from_str(&ZH).expect("Invalid SimpleChinese localization"),
-                LocLang::Spanish => serde_json::from_str(&ES).expect("Invalid Spanish localization")
+                LocLang::Russian => {
+                    serde_json::from_str(&RU).expect("Invalid Russian localization")
+                }
+                LocLang::SimpleChinese => {
+                    serde_json::from_str(&ZH).expect("Invalid SimpleChinese localization")
+                }
+                LocLang::Spanish => {
+                    serde_json::from_str(&ES).expect("Invalid Spanish localization")
+                }
             },
-            language: value
+            language: value,
         }
     }
 }
 
 impl<'a> Localization<'a> {
     pub fn get(&self, key: &'a str) -> Cow<'a, str> {
-        self.strings.get(&key)
+        self.strings
+            .get(&key)
             .map(|v| v.clone())
             .unwrap_or(key.into())
     }
@@ -135,8 +148,10 @@ impl<'a> Localization<'a> {
             LocLang::Japanese => serde_json::from_str(&JA).expect("Invalid Japanese localization"),
             LocLang::Korean => serde_json::from_str(&KO).expect("Invalid Korean localization"),
             LocLang::Russian => serde_json::from_str(&RU).expect("Invalid Russian localization"),
-            LocLang::SimpleChinese => serde_json::from_str(&ZH).expect("Invalid SimpleChinese localization"),
-            LocLang::Spanish => serde_json::from_str(&ES).expect("Invalid Spanish localization")
+            LocLang::SimpleChinese => {
+                serde_json::from_str(&ZH).expect("Invalid SimpleChinese localization")
+            }
+            LocLang::Spanish => serde_json::from_str(&ES).expect("Invalid Spanish localization"),
         };
         self.language = *lang;
     }

@@ -4,18 +4,18 @@ use std::collections::{BTreeMap, BTreeSet};
 use anyhow::Context;
 use join_str::jstr;
 pub use msyt::{
-    model::{Entry, MsbtInfo},
     Endianness, Msyt,
+    model::{Entry, MsbtInfo},
 };
 use roead::sarc::{Sarc, SarcWriter};
 use serde::{Deserialize, Serialize};
 
-use crate::{prelude::*, Result, UKError};
+use crate::{Result, UKError, prelude::*};
 
 impl Mergeable for Msyt {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            msbt:    self.msbt.clone(),
+            msbt: self.msbt.clone(),
             entries: other
                 .entries
                 .iter()
@@ -33,7 +33,7 @@ impl Mergeable for Msyt {
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
         Self {
-            msbt:    MsbtInfo {
+            msbt: MsbtInfo {
                 group_count: entries.len() as u32,
                 atr1_unknown: self.msbt.atr1_unknown,
                 ato1: self.msbt.ato1.clone(),

@@ -5,12 +5,12 @@ use std::{
     ops::Deref,
     path::{Path, PathBuf},
     sync::{
-        atomic::{AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicUsize, Ordering},
     },
 };
 
-use anyhow_ext::{bail, Context, Result};
+use anyhow_ext::{Context, Result, bail};
 use botw_utils::hashes::StockHashTable;
 use dashmap::DashMap;
 use fs_err as fs;
@@ -77,10 +77,10 @@ impl std::fmt::Debug for ZipData {
 
 #[self_referencing]
 pub struct ParallelZipReader {
-    data:  ZipData,
+    data: ZipData,
     #[borrows(data)]
     #[covariant]
-    zip:   piz::ZipArchive<'this>,
+    zip: piz::ZipArchive<'this>,
     #[borrows(zip)]
     #[covariant]
     files: HashMap<&'this Path, &'this piz::read::FileMetadata<'this>>,
@@ -226,9 +226,9 @@ impl ModReader {
                 let path = Path::new("options").join(&opt.path).join(canon.as_str());
                 if let Some(zip) = self_.zip.as_ref() {
                     if let Ok(data) = zip.get_file(path) {
-                        return Ok(self_
-                            .decompress(data.as_slice())
-                            .with_context(|| jstr!("Failed to decompress file {&canon} from mod"))?);
+                        return Ok(self_.decompress(data.as_slice()).with_context(|| {
+                            jstr!("Failed to decompress file {&canon} from mod")
+                        })?);
                     }
                 } else if let Some(path) = self_.path.join(path).exists_then() {
                     return Ok(fs::read(path)?);
@@ -238,7 +238,8 @@ impl ModReader {
                 "Failed to read file {} (canonical path {}) from mod",
                 name.display(),
                 canon
-            ).into())
+            )
+            .into())
         }
         inner(self, name.as_ref())
     }
@@ -257,7 +258,7 @@ impl ModReader {
         let result = if path.is_file() {
             match peek {
                 true => ModReader::open_zipped_peek(path, options),
-                false => ModReader::open_zipped(path, options)
+                false => ModReader::open_zipped(path, options),
             }
         } else {
             ModReader::open_unzipped(path, options)
@@ -435,14 +436,14 @@ static RSTB_EXCLUDE_NAMES: &[&str] = &["ActorInfo.product.byml"];
 
 // #[derive(Debug)]
 pub struct ModUnpacker {
-    dump:     Arc<ResourceReader>,
+    dump: Arc<ResourceReader>,
     manifest: Option<Manifest>,
-    mods:     Vec<ModReader>,
-    endian:   Endian,
-    lang:     Language,
-    rstb:     DashMap<String, Option<u32>>,
-    hashes:   StockHashTable,
-    out_dir:  PathBuf,
+    mods: Vec<ModReader>,
+    endian: Endian,
+    lang: Language,
+    rstb: DashMap<String, Option<u32>>,
+    hashes: StockHashTable,
+    out_dir: PathBuf,
 }
 
 impl ModUnpacker {
@@ -682,9 +683,7 @@ impl ModUnpacker {
                              of UKMM."
                         );
                     } else {
-                        bail!(
-                            "Error deserializing resource {canon} from mod {mod_}. Error: {e}"
-                        );
+                        bail!("Error deserializing resource {canon} from mod {mod_}. Error: {e}");
                     }
                 }
             }
@@ -716,7 +715,8 @@ impl ModUnpacker {
                 }
                 match Arc::try_unwrap(res) {
                     Ok(res) => res.take_binary().context("No binary resource?")?,
-                    Err(res) => res.as_binary()
+                    Err(res) => res
+                        .as_binary()
                         .map(|b| b.to_vec())
                         .context("No binary resource?")?,
                 }

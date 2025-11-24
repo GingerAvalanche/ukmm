@@ -3,17 +3,17 @@ use roead::{aamp::*, byml::Byml};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Result, UKError,
     actor::{InfoSource, ParameterResource},
     prelude::*,
     util::{self, DeleteSet},
-    Result, UKError,
 };
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 
 pub struct ActorLink {
-    pub targets:  ParameterObject,
-    pub tags:     Option<DeleteSet<String>>,
+    pub targets: ParameterObject,
+    pub tags: Option<DeleteSet<String>>,
     pub fit_tags: Option<DeleteSet<String>>,
 }
 
@@ -22,14 +22,14 @@ impl TryFrom<&ParameterIO> for ActorLink {
 
     fn try_from(pio: &ParameterIO) -> Result<Self> {
         Ok(Self {
-            targets:  pio
+            targets: pio
                 .object("LinkTarget")
                 .ok_or(UKError::MissingAampKey(
                     "Actor link missing link targets",
                     None,
                 ))?
                 .clone(),
-            tags:     pio.object("Tags").map(|tags| {
+            tags: pio.object("Tags").map(|tags| {
                 tags.0
                     .values()
                     .filter_map(|v| v.as_str().ok().map(|s| (s.into(), false)))
@@ -93,8 +93,8 @@ impl From<ActorLink> for ParameterIO {
                 },
                 ..Default::default()
             },
-            version:    0,
-            data_type:  "xml".into(),
+            version: 0,
+            data_type: "xml".into(),
         }
     }
 }
@@ -102,8 +102,8 @@ impl From<ActorLink> for ParameterIO {
 impl Mergeable for ActorLink {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            targets:  util::diff_pobj(&self.targets, &other.targets),
-            tags:     other.tags.as_ref().map(|diff_tags| {
+            targets: util::diff_pobj(&self.targets, &other.targets),
+            tags: other.tags.as_ref().map(|diff_tags| {
                 if let Some(self_tags) = self.tags.as_ref() {
                     self_tags.diff(diff_tags)
                 } else {
@@ -122,14 +122,14 @@ impl Mergeable for ActorLink {
 
     fn merge(&self, other: &Self) -> Self {
         Self {
-            targets:  self
+            targets: self
                 .targets
                 .0
                 .iter()
                 .chain(other.targets.0.iter())
                 .map(|(k, v)| (*k, v.clone()))
                 .collect(),
-            tags:     {
+            tags: {
                 if let Some(base_tags) = &self.tags {
                     if let Some(other_tags) = &other.tags {
                         Some(base_tags.merge(other_tags))

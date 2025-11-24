@@ -186,13 +186,11 @@ impl App {
                         };
                     }
                 }
-                Message::DeleteProfile(profile) => {
-                    self.do_task(move |core| {
-                        let path = core.settings().profiles_dir().join(profile.as_str());
-                        fs::remove_dir_all(path)?;
-                        Ok(Message::CleanProfile(profile))
-                    })
-                }
+                Message::DeleteProfile(profile) => self.do_task(move |core| {
+                    let path = core.settings().profiles_dir().join(profile.as_str());
+                    fs::remove_dir_all(path)?;
+                    Ok(Message::CleanProfile(profile))
+                }),
                 Message::DuplicateProfile(profile) => {
                     self.do_task(move |core| {
                         let profiles_dir = core.settings().profiles_dir();
@@ -205,13 +203,11 @@ impl App {
                         Ok(Message::ReloadProfiles)
                     });
                 }
-                Message::RenameProfile(profile, rename) => {
-                    self.do_task(move |core| {
-                        let profiles_dir = core.settings().profiles_dir();
-                        fs::rename(profiles_dir.join(&profile), profiles_dir.join(rename))?;
-                        Ok(Message::ReloadProfiles)
-                    })
-                }
+                Message::RenameProfile(profile, rename) => self.do_task(move |core| {
+                    let profiles_dir = core.settings().profiles_dir();
+                    fs::rename(profiles_dir.join(&profile), profiles_dir.join(rename))?;
+                    Ok(Message::ReloadProfiles)
+                }),
                 Message::CleanProfile(profile) => {
                     let mut state = self.profiles_state.borrow_mut();
                     let mods = state
@@ -221,7 +217,7 @@ impl App {
                         .mods()
                         .iter()
                         .map(|(h, m)| (*h, m.path.clone()))
-                        .collect::<HashMap<_,_>>();
+                        .collect::<HashMap<_, _>>();
                     state.reload(&self.core);
                     let assigned = state.all_assigned_mod_hashes();
                     mods.iter()
@@ -256,7 +252,10 @@ impl App {
                     let loc = LOCALIZATION.read();
                     if let Some(mut paths) = rfd::FileDialog::new()
                         .set_title(loc.get("Mod_Select_Title"))
-                        .add_filter("Any mod (*.zip, *.7z, *.bnp, rules.txt)", &["zip", "bnp", "7z", "txt"])
+                        .add_filter(
+                            "Any mod (*.zip, *.7z, *.bnp, rules.txt)",
+                            &["zip", "bnp", "7z", "txt"],
+                        )
                         .add_filter("UKMM Mod (*.zip)", &["zip"])
                         .add_filter("BCML Mod (*.bnp)", &["bnp"])
                         .add_filter("Legacy Mod (*.zip, *.7z, rules.txt)", &["zip", "7z", "txt"])
@@ -347,7 +346,10 @@ impl App {
                     let loc = LOCALIZATION.read();
                     if let Some(file) = rfd::FileDialog::new()
                         .set_title(loc.get("Mod_Select_Title"))
-                        .add_filter("Any mod (*.zip, *.7z, *.bnp, rules.txt)", &["zip", "bnp", "7z", "txt"])
+                        .add_filter(
+                            "Any mod (*.zip, *.7z, *.bnp, rules.txt)",
+                            &["zip", "bnp", "7z", "txt"],
+                        )
                         .add_filter("UKMM Mod (*.zip)", &["zip"])
                         .add_filter("BCML Mod (*.bnp)", &["bnp"])
                         .add_filter("Legacy Mod (*.zip, *.7z, rules.txt)", &["zip", "7z", "txt"])
@@ -433,9 +435,10 @@ impl App {
                         self.toasts.add({
                             let loc = LOCALIZATION.read();
                             let message = loc.get("Profile_Added");
-                            let vars = std::collections::HashMap::from(
-                                [("profile_name".to_string(), profile.to_string())]
-                            );
+                            let vars = std::collections::HashMap::from([(
+                                "profile_name".to_string(),
+                                profile.to_string(),
+                            )]);
                             let mut toast = Toast::success(message.format(&vars).unwrap());
                             toast.set_duration(Some(Duration::new(2, 0)));
                             toast
@@ -458,20 +461,16 @@ impl App {
                     let dirty = std::mem::take(self.dirty_mut().deref_mut());
                     self.do_task(move |core| tasks::apply_changes(&core, mods, Some(dirty)));
                 }
-                Message::Deploy => {
-                    self.do_task(move |core| {
-                        log::info!("Deploying current mod configuration");
-                        core.deploy_manager().deploy()?;
-                        Ok(Message::ResetMods(None))
-                    })
-                }
-                Message::ResetPending => {
-                    self.do_task(|core| {
-                        log::info!("Resetting pending deployment data");
-                        core.deploy_manager().reset_pending()?;
-                        Ok(Message::Noop)
-                    })
-                }
+                Message::Deploy => self.do_task(move |core| {
+                    log::info!("Deploying current mod configuration");
+                    core.deploy_manager().deploy()?;
+                    Ok(Message::ResetMods(None))
+                }),
+                Message::ResetPending => self.do_task(|core| {
+                    log::info!("Resetting pending deployment data");
+                    core.deploy_manager().reset_pending()?;
+                    Ok(Message::Noop)
+                }),
                 Message::Remerge => {
                     self.do_task(|core| tasks::apply_changes(&core, vec![], None));
                 }
@@ -486,11 +485,15 @@ impl App {
                         old_plat.deploy_config.as_ref().map(|old_dep| {
                             if let Some(new_plat) = &self.temp_settings.platform_config() {
                                 new_plat.deploy_config.as_ref().map(|new_dep| {
-                                    if old_dep.layout != new_dep.layout ||
-                                        old_dep.method != new_dep.method ||
-                                        old_dep.output != new_dep.output {
-                                        if let Ok(_) = self.core.settings()
-                                            .wipe_output(self.core.settings().current_mode.into()) {
+                                    if old_dep.layout != new_dep.layout
+                                        || old_dep.method != new_dep.method
+                                        || old_dep.output != new_dep.output
+                                    {
+                                        if let Ok(_) = self
+                                            .core
+                                            .settings()
+                                            .wipe_output(self.core.settings().current_mode.into())
+                                        {
                                             needs_reset = true;
                                         }
                                     }
@@ -653,11 +656,7 @@ impl App {
                 Message::OfferUpdate(version) => {
                     let loc = LOCALIZATION.read();
                     let message = loc.get("Update_Available");
-                    self.changelog = Some(format!(
-                        "{}\n\n{}",
-                        message,
-                        version.description()
-                    ));
+                    self.changelog = Some(format!("{}\n\n{}", message, version.description()));
                     self.new_version = Some(version);
                 }
                 Message::DoUpdate => {

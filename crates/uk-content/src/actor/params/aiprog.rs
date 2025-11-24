@@ -13,10 +13,10 @@ use uk_content_derive::ParamData;
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::ParameterResource,
     prelude::*,
     util::{self, HashMap, IndexMap, IndexSet},
-    Result, UKError,
 };
 
 #[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
@@ -180,10 +180,10 @@ impl Mergeable for AIEntry {
 #[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
 
 pub struct AIProgram {
-    pub demos:     IndexMap<Name, AIEntry>,
+    pub demos: IndexMap<Name, AIEntry>,
     pub behaviors: BTreeMap<usize, AIEntry>,
-    pub queries:   BTreeMap<usize, AIEntry>,
-    pub roots:     IndexMap<String, AIEntry>,
+    pub queries: BTreeMap<usize, AIEntry>,
+    pub roots: IndexMap<String, AIEntry>,
 }
 
 struct Parser<'a> {
@@ -627,29 +627,41 @@ impl Writer {
         } = self;
         ParameterIO::new()
             .with_object("DemoAIActionIdx", demos)
-            .with_list("AI", ParameterList {
-                lists: ais,
-                ..Default::default()
-            })
-            .with_list("Action", ParameterList {
-                lists: actions,
-                ..Default::default()
-            })
-            .with_list("Behavior", ParameterList {
-                lists: behaviors,
-                ..Default::default()
-            })
-            .with_list("Query", ParameterList {
-                lists: queries,
-                ..Default::default()
-            })
+            .with_list(
+                "AI",
+                ParameterList {
+                    lists: ais,
+                    ..Default::default()
+                },
+            )
+            .with_list(
+                "Action",
+                ParameterList {
+                    lists: actions,
+                    ..Default::default()
+                },
+            )
+            .with_list(
+                "Behavior",
+                ParameterList {
+                    lists: behaviors,
+                    ..Default::default()
+                },
+            )
+            .with_list(
+                "Query",
+                ParameterList {
+                    lists: queries,
+                    ..Default::default()
+                },
+            )
     }
 }
 
 impl Mergeable for AIProgram {
     fn diff(&self, other: &Self) -> Self {
         AIProgram {
-            demos:     other
+            demos: other
                 .demos
                 .iter()
                 .filter_map(|(k, v)| {
@@ -666,7 +678,7 @@ impl Mergeable for AIProgram {
                 .filter(|&(k, v)| Some(v) != self.behaviors.get(k))
                 .map(|(k, v)| (*k, v.clone()))
                 .collect(),
-            queries:   other
+            queries: other
                 .queries
                 .iter()
                 .filter_map(|(k, v)| {
@@ -677,7 +689,7 @@ impl Mergeable for AIProgram {
                     }
                 })
                 .collect(),
-            roots:     other
+            roots: other
                 .roots
                 .iter()
                 .filter_map(|(k, v)| {
@@ -693,7 +705,7 @@ impl Mergeable for AIProgram {
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            demos:     {
+            demos: {
                 let all_keys: HashSet<_> = self.demos.keys().chain(diff.demos.keys()).collect();
                 all_keys
                     .into_iter()
@@ -738,7 +750,7 @@ impl Mergeable for AIProgram {
                     })
                     .collect()
             },
-            queries:   {
+            queries: {
                 let all_keys: HashSet<_> = self.queries.keys().chain(diff.queries.keys()).collect();
                 all_keys
                     .into_iter()
@@ -760,7 +772,7 @@ impl Mergeable for AIProgram {
                     })
                     .collect()
             },
-            roots:     {
+            roots: {
                 let all_keys: HashSet<_> = self.roots.keys().chain(diff.roots.keys()).collect();
                 all_keys
                     .into_iter()

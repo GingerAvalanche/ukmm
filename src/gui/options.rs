@@ -5,7 +5,7 @@ use uk_ui::{
     visuals,
 };
 
-use super::{App, Message, LOCALIZATION};
+use super::{App, LOCALIZATION, Message};
 
 impl App {
     pub fn render_option_picker(&mut self, ctx: &Context) {
@@ -98,7 +98,10 @@ impl App {
                 ui.horizontal(|ui| {
                     ui.add_space(2.);
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        if ui.add_enabled(done, Button::new(loc.get("Generic_OK"))).clicked() {
+                        if ui
+                            .add_enabled(done, Button::new(loc.get("Generic_OK")))
+                            .clicked()
+                        {
                             let (mod_, update) = self.options_mod.take().unwrap();
                             if update {
                                 self.do_update(Message::UpdateOptions(mod_));

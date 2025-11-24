@@ -421,7 +421,8 @@ impl<T: DeleteKey + Ord> Mergeable for SortedDeleteSet<T> {
                 .chain(other.0.keys())
                 .map(|k| (k.clone(), other.0.get(k).copied().unwrap_or(false)))
                 .collect(),
-        ).and_delete()
+        )
+        .and_delete()
     }
 }
 

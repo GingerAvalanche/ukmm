@@ -1,23 +1,23 @@
 use std::path::Path;
 pub use std::path::PathBuf;
 
-use egui::{epaint::text::TextWrapping, text::LayoutJob, FontId, Label, Sense, TextFormat, Ui};
+use egui::{FontId, Label, Sense, TextFormat, Ui, epaint::text::TextWrapping, text::LayoutJob};
 
 // A recursive type to represent a directory tree.
 // Simplification: If it has children, it is considered
 // a directory, else considered a file.
 #[derive(Debug, Clone, Hash)]
 pub struct PathNode {
-    name:     String,
-    path:     Option<PathBuf>,
+    name: String,
+    path: Option<PathBuf>,
     children: Vec<PathNode>,
 }
 
 impl PathNode {
     pub fn new(name: &str) -> PathNode {
         PathNode {
-            name:     name.into(),
-            path:     None,
+            name: name.into(),
+            path: None,
             children: Vec::<PathNode>::new(),
         }
     }
@@ -74,16 +74,19 @@ impl PathNode {
                     })
                 });
         } else {
-            let mut job = LayoutJob::single_section(self.name.clone(), TextFormat {
-                font_id: FontId::proportional(
-                    ui.style()
-                        .text_styles
-                        .get(&egui::TextStyle::Body)
-                        .unwrap()
-                        .size,
-                ),
-                ..Default::default()
-            });
+            let mut job = LayoutJob::single_section(
+                self.name.clone(),
+                TextFormat {
+                    font_id: FontId::proportional(
+                        ui.style()
+                            .text_styles
+                            .get(&egui::TextStyle::Body)
+                            .unwrap()
+                            .size,
+                    ),
+                    ..Default::default()
+                },
+            );
             job.wrap = TextWrapping {
                 max_width: ui.available_width(),
                 max_rows: 1,
@@ -110,16 +113,19 @@ impl PathNode {
                     })
                 });
         } else {
-            let mut job = LayoutJob::single_section(self.name.clone(), TextFormat {
-                font_id: FontId::proportional(
-                    ui.style()
-                        .text_styles
-                        .get(&egui::TextStyle::Body)
-                        .unwrap()
-                        .size,
-                ),
-                ..Default::default()
-            });
+            let mut job = LayoutJob::single_section(
+                self.name.clone(),
+                TextFormat {
+                    font_id: FontId::proportional(
+                        ui.style()
+                            .text_styles
+                            .get(&egui::TextStyle::Body)
+                            .unwrap()
+                            .size,
+                    ),
+                    ..Default::default()
+                },
+            );
             job.wrap = TextWrapping {
                 max_width: ui.available_width(),
                 max_rows: 1,

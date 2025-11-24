@@ -5,8 +5,8 @@ use parking_lot::Mutex;
 use rustc_hash::FxHashSet;
 use uk_manager::settings::Platform;
 use uk_mod::{
-    ExclusiveOptionGroup, Meta, ModOption, ModOptionGroup, ModPlatform, MultipleOptionGroup,
-    OptionGroup, ModCategory,
+    ExclusiveOptionGroup, Meta, ModCategory, ModOption, ModOptionGroup, ModPlatform,
+    MultipleOptionGroup, OptionGroup,
 };
 use uk_ui::{
     egui::{self, Align2, Context, Id, Layout, Response, TextStyle, Ui},
@@ -14,7 +14,7 @@ use uk_ui::{
     icons::{Icon, IconButtonExt},
 };
 
-use super::{App, Message, LOCALIZATION};
+use super::{App, LOCALIZATION, Message};
 use crate::gui::util::SmartStringWrapper;
 
 fn render_field(name: &str, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> Response) {
@@ -25,16 +25,16 @@ fn render_field(name: &str, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R
 #[derive(Debug, Clone)]
 pub struct ModPackerBuilder {
     pub source: PathBuf,
-    pub dest:   PathBuf,
-    pub meta:   Meta,
+    pub dest: PathBuf,
+    pub meta: Meta,
 }
 
 impl ModPackerBuilder {
     pub fn new(platform: Platform) -> Self {
         ModPackerBuilder {
             source: Default::default(),
-            dest:   Default::default(),
-            meta:   Meta {
+            dest: Default::default(),
+            meta: Meta {
                 api: env!("CARGO_PKG_VERSION").into(),
                 name: Default::default(),
                 version: "1.0.0".into(),
@@ -116,10 +116,10 @@ impl ModPackerBuilder {
                     egui::Frame::none().inner_margin(8.0).show(ui, |ui| {
                         ui.spacing_mut().item_spacing.y = 8.0;
                         ui.horizontal(|ui| {
-                            if ui.icon_text_button(
-                                loc.get("Options_Group_Add"),
-                                Icon::Add
-                            ).clicked() {
+                            if ui
+                                .icon_text_button(loc.get("Options_Group_Add"), Icon::Add)
+                                .clicked()
+                            {
                                 self.meta
                                     .options
                                     .push(OptionGroup::Multiple(Default::default()));
@@ -163,10 +163,10 @@ impl ModPackerBuilder {
                 egui::CollapsingHeader::new(group_name)
                     .default_open(true)
                     .show(ui, |ui| {
-                        if ui.icon_text_button(
-                            loc.get("Generic_Delete"),
-                            Icon::Delete
-                        ).clicked() {
+                        if ui
+                            .icon_text_button(loc.get("Generic_Delete"), Icon::Delete)
+                            .clicked()
+                        {
                             delete = Some(i);
                         }
                         ui.label(loc.get("Options_Group_Name"));
@@ -180,7 +180,7 @@ impl ModPackerBuilder {
                             if ui
                                 .radio(
                                     matches!(opt_group, OptionGroup::Exclusive(_)),
-                                    loc.get("Options_Group_Exclusive")
+                                    loc.get("Options_Group_Exclusive"),
                                 )
                                 .clicked()
                             {
@@ -195,7 +195,7 @@ impl ModPackerBuilder {
                             if ui
                                 .radio(
                                     matches!(opt_group, OptionGroup::Multiple(_)),
-                                    loc.get("Options_Group_Multiple")
+                                    loc.get("Options_Group_Multiple"),
                                 )
                                 .clicked()
                             {
@@ -238,7 +238,10 @@ impl ModPackerBuilder {
                                 });
                         }
                         ui.add_enabled_ui(!folders.lock().is_empty(), |ui| {
-                            if ui.icon_text_button(loc.get("Options_Add"), Icon::Add).clicked() {
+                            if ui
+                                .icon_text_button(loc.get("Options_Add"), Icon::Add)
+                                .clicked()
+                            {
                                 opt_group.options_mut().push(ModOption {
                                     name: Default::default(),
                                     description: Default::default(),
@@ -291,7 +294,10 @@ impl ModPackerBuilder {
                 .id_source(id.with("header"))
                 .default_open(true)
                 .show(ui, |ui| {
-                    if ui.icon_text_button(loc.get("Generic_Delete"), Icon::Delete).clicked() {
+                    if ui
+                        .icon_text_button(loc.get("Generic_Delete"), Icon::Delete)
+                        .clicked()
+                    {
                         *delete = Some(i);
                     }
                     ui.label(loc.get("Options_Name"));
@@ -300,7 +306,10 @@ impl ModPackerBuilder {
                     ui.text_edit_multiline(&mut SmartStringWrapper(&mut option.description));
                     if let Some(ref mut defaults) = defaults {
                         let mut default = defaults.contains(&option.path);
-                        if ui.checkbox(&mut default, loc.get("Options_Default_Enable")).changed() {
+                        if ui
+                            .checkbox(&mut default, loc.get("Options_Default_Enable"))
+                            .changed()
+                        {
                             if default {
                                 defaults.insert(option.path.clone());
                             } else {
@@ -354,10 +363,10 @@ impl ModPackerBuilder {
             ui.horizontal(|ui| {
                 let source_set = self.source.exists();
                 ui.add_enabled_ui(source_set, |ui| {
-                    if ui.icon_text_button(
-                        loc.get("Package_ManageOptions"),
-                        Icon::Tune
-                    ).clicked() {
+                    if ui
+                        .icon_text_button(loc.get("Package_ManageOptions"), Icon::Tune)
+                        .clicked()
+                    {
                         app.do_update(Message::GetPackagingOptions);
                     }
                 });
@@ -367,23 +376,22 @@ impl ModPackerBuilder {
                 {
                     app.do_update(Message::ShowPackagingDependencies);
                 }
-                if ui.icon_text_button(loc.get("Menu_Help"), Icon::Help).clicked() {
+                if ui
+                    .icon_text_button(loc.get("Menu_Help"), Icon::Help)
+                    .clicked()
+                {
                     open::that("https://nicenenerd.github.io/UKMM/mod_format.html").unwrap_or(());
                 }
             });
             ui.add_space(8.0);
             let mut name = loc.get("Package_RootFolder");
-            render_field(
-                &name,
-                ui,
-                |ui| {
-                    let res = ui.folder_picker(&mut self.source);
-                    if res.changed() {
-                        app.do_update(Message::CheckMeta);
-                    }
-                    res
+            render_field(&name, ui, |ui| {
+                let res = ui.folder_picker(&mut self.source);
+                if res.changed() {
+                    app.do_update(Message::CheckMeta);
                 }
-            );
+                res
+            });
             let mut cross = matches!(self.meta.platform, ModPlatform::Universal);
             if ui
                 .checkbox(&mut cross, loc.get("Package_CrossPlatform"))
@@ -430,7 +438,7 @@ impl ModPackerBuilder {
                             ui.selectable_value(
                                 &mut self.meta.category,
                                 *cat,
-                                loc.get(cat.to_loc_str())
+                                loc.get(cat.to_loc_str()),
                             );
                         });
                     })

@@ -4,8 +4,8 @@ use strfmt::Format;
 use uk_manager::mods::Mod;
 use uk_ui::{
     egui::{
-        self, epaint::Margin, text::LayoutJob, Align, Button, Color32, CursorIcon, Id, Key,
-        LayerId, Layout, Response, Sense, TextStyle, Ui, Vec2,
+        self, Align, Button, Color32, CursorIcon, Id, Key, LayerId, Layout, Response, Sense,
+        TextStyle, Ui, Vec2, epaint::Margin, text::LayoutJob,
     },
     egui_extras::{Column, TableBuilder, TableRow},
     ext::UiExt,
@@ -53,9 +53,9 @@ impl App {
         egui::Frame::none()
             .inner_margin(Margin {
                 bottom: 4.0,
-                top:    4.0,
-                left:   4.0,
-                right:  -12.0,
+                top: 4.0,
+                left: 4.0,
+                right: -12.0,
             })
             .show(ui, |ui| {
                 ui.style_mut()
@@ -359,9 +359,8 @@ impl App {
                     ContextMenuMessage::Uninstall => {
                         let loc = LOCALIZATION.read();
                         let message = loc.get("Mod_Uninstall_Confirmation");
-                        let vars = HashMap::from(
-                            [("mod_name".to_string(), mod_.meta.name.to_string())]
-                        );
+                        let vars =
+                            HashMap::from([("mod_name".to_string(), mod_.meta.name.to_string())]);
                         let prompt = message.format(&vars).unwrap();
                         self.do_update(Message::Confirm(
                             Message::UninstallMods(None).into(),

@@ -1,30 +1,31 @@
 use anyhow::Context;
 use itertools::Itertools;
-use roead::byml::{map, Byml};
+use roead::byml::{Byml, map};
 use smartstring::alias::String;
 
-use crate::{util::parsers::try_get_vecf, prelude::Mergeable, util::DeleteMap};
+use crate::{prelude::Mergeable, util::DeleteMap, util::parsers::try_get_vecf};
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct CollabAnchor {
-    pub collabo_shooting_star_direction:    Option<i32>,
-    pub collabo_shooting_star_end_hour:     Option<i32>,
-    pub collabo_shooting_star_start_hour:   Option<i32>,
-    pub translate:                          DeleteMap<char, f32>,
-    pub collabo_ssfallout_flag_name:        Option<String>,
-    pub collabo_ssopen_flag_name:           Option<String>,
-    pub collabo_ssquest_flag:               Option<String>,
+    pub collabo_shooting_star_direction: Option<i32>,
+    pub collabo_shooting_star_end_hour: Option<i32>,
+    pub collabo_shooting_star_start_hour: Option<i32>,
+    pub translate: DeleteMap<char, f32>,
+    pub collabo_ssfallout_flag_name: Option<String>,
+    pub collabo_ssopen_flag_name: Option<String>,
+    pub collabo_ssquest_flag: Option<String>,
 }
 
 impl CollabAnchor {
     pub fn id(&self) -> String {
-        roead::aamp::hash_name(
-            &format!(
-                "{}{}",
-                self.translate.values().map(|v| (v * 100000.0f32).to_string()).join(""),
-                self.collabo_ssopen_flag_name.clone().unwrap()
-            )
-        )
+        roead::aamp::hash_name(&format!(
+            "{}{}",
+            self.translate
+                .values()
+                .map(|v| (v * 100000.0f32).to_string())
+                .join(""),
+            self.collabo_ssopen_flag_name.clone().unwrap()
+        ))
         .to_string()
         .into()
     }
@@ -34,39 +35,54 @@ impl TryFrom<&Byml> for CollabAnchor {
     type Error = anyhow::Error;
 
     fn try_from(value: &Byml) -> anyhow::Result<Self> {
-        let map = value.as_map()
+        let map = value
+            .as_map()
             .expect("TargetPosMarker node must be HashMap");
         Ok(Self {
-            collabo_shooting_star_direction: Some(map.get("CollaboShootingStarDirection")
-                .context("CollabAnchor must have CollaboShootingStarDirection")?
-                .as_i32()
-                .context("CollabAnchor CollaboShootingStarDirection must be Int")?),
-            collabo_shooting_star_end_hour: Some(map.get("CollaboShootingStarEndHour")
-                .context("CollabAnchor must have CollaboShootingStarEndHour")?
-                .as_i32()
-                .context("CollabAnchor CollaboShootingStarEndHour must be Int")?),
-            collabo_shooting_star_start_hour: Some(map.get("CollaboShootingStarStartHour")
-                .context("CollabAnchor must have CollaboShootingStarStartHour")?
-                .as_i32()
-                .context("CollabAnchor CollaboShootingStarStartHour must be Int")?),
-            translate: try_get_vecf(map.get("Translate")
-                .context("CollabAnchor must have Translate")?)
-                .context("Invalid CollabAnchor Translate")?,
-            collabo_ssfallout_flag_name: Some(map.get("collaboSSFalloutFlagName")
-                .context("CollabAnchor must have collaboSSFalloutFlagName")?
-                .as_string()
-                .context("CollabAnchor collaboSSFalloutFlagName must be String")?
-                .clone()),
-            collabo_ssopen_flag_name: Some(map.get("collaboSSOpenFlagName")
-                .context("CollabAnchor must have collaboSSOpenFlagName")?
-                .as_string()
-                .context("CollabAnchor collaboSSOpenFlagName must be String")?
-                .clone()),
-            collabo_ssquest_flag: Some(map.get("collaboSSQuestFlag")
-                .context("CollabAnchor must have collaboSSQuestFlag")?
-                .as_string()
-                .context("CollabAnchor collaboSSQuestFlag must be String")?
-                .clone()),
+            collabo_shooting_star_direction: Some(
+                map.get("CollaboShootingStarDirection")
+                    .context("CollabAnchor must have CollaboShootingStarDirection")?
+                    .as_i32()
+                    .context("CollabAnchor CollaboShootingStarDirection must be Int")?,
+            ),
+            collabo_shooting_star_end_hour: Some(
+                map.get("CollaboShootingStarEndHour")
+                    .context("CollabAnchor must have CollaboShootingStarEndHour")?
+                    .as_i32()
+                    .context("CollabAnchor CollaboShootingStarEndHour must be Int")?,
+            ),
+            collabo_shooting_star_start_hour: Some(
+                map.get("CollaboShootingStarStartHour")
+                    .context("CollabAnchor must have CollaboShootingStarStartHour")?
+                    .as_i32()
+                    .context("CollabAnchor CollaboShootingStarStartHour must be Int")?,
+            ),
+            translate: try_get_vecf(
+                map.get("Translate")
+                    .context("CollabAnchor must have Translate")?,
+            )
+            .context("Invalid CollabAnchor Translate")?,
+            collabo_ssfallout_flag_name: Some(
+                map.get("collaboSSFalloutFlagName")
+                    .context("CollabAnchor must have collaboSSFalloutFlagName")?
+                    .as_string()
+                    .context("CollabAnchor collaboSSFalloutFlagName must be String")?
+                    .clone(),
+            ),
+            collabo_ssopen_flag_name: Some(
+                map.get("collaboSSOpenFlagName")
+                    .context("CollabAnchor must have collaboSSOpenFlagName")?
+                    .as_string()
+                    .context("CollabAnchor collaboSSOpenFlagName must be String")?
+                    .clone(),
+            ),
+            collabo_ssquest_flag: Some(
+                map.get("collaboSSQuestFlag")
+                    .context("CollabAnchor must have collaboSSQuestFlag")?
+                    .as_string()
+                    .context("CollabAnchor collaboSSQuestFlag must be String")?
+                    .clone(),
+            ),
         })
     }
 }
@@ -103,28 +119,34 @@ impl From<CollabAnchor> for Byml {
 impl Mergeable for CollabAnchor {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            collabo_shooting_star_direction: other.collabo_shooting_star_direction
+            collabo_shooting_star_direction: other
+                .collabo_shooting_star_direction
                 .ne(&self.collabo_shooting_star_direction)
                 .then(|| other.collabo_shooting_star_direction)
                 .unwrap(),
-            collabo_shooting_star_end_hour: other.collabo_shooting_star_end_hour
+            collabo_shooting_star_end_hour: other
+                .collabo_shooting_star_end_hour
                 .ne(&self.collabo_shooting_star_end_hour)
                 .then(|| other.collabo_shooting_star_end_hour)
                 .unwrap(),
-            collabo_shooting_star_start_hour: other.collabo_shooting_star_start_hour
+            collabo_shooting_star_start_hour: other
+                .collabo_shooting_star_start_hour
                 .ne(&self.collabo_shooting_star_start_hour)
                 .then(|| other.collabo_shooting_star_start_hour)
                 .unwrap(),
             translate: self.translate.diff(&other.translate),
-            collabo_ssfallout_flag_name: other.collabo_ssfallout_flag_name
+            collabo_ssfallout_flag_name: other
+                .collabo_ssfallout_flag_name
                 .ne(&self.collabo_ssfallout_flag_name)
                 .then(|| other.collabo_ssfallout_flag_name.clone())
                 .unwrap(),
-            collabo_ssopen_flag_name: other.collabo_ssopen_flag_name
+            collabo_ssopen_flag_name: other
+                .collabo_ssopen_flag_name
                 .ne(&self.collabo_ssopen_flag_name)
                 .then(|| other.collabo_ssopen_flag_name.clone())
                 .unwrap(),
-            collabo_ssquest_flag: other.collabo_ssquest_flag
+            collabo_ssquest_flag: other
+                .collabo_ssquest_flag
                 .ne(&self.collabo_ssquest_flag)
                 .then(|| other.collabo_ssquest_flag.clone())
                 .unwrap(),
@@ -133,33 +155,42 @@ impl Mergeable for CollabAnchor {
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            collabo_shooting_star_direction: diff.collabo_shooting_star_direction
+            collabo_shooting_star_direction: diff
+                .collabo_shooting_star_direction
                 .eq(&self.collabo_shooting_star_direction)
                 .then(|| self.collabo_shooting_star_direction)
                 .or_else(|| Some(diff.collabo_shooting_star_direction))
                 .unwrap(),
-            collabo_shooting_star_end_hour: diff.collabo_shooting_star_end_hour
+            collabo_shooting_star_end_hour: diff
+                .collabo_shooting_star_end_hour
                 .eq(&self.collabo_shooting_star_end_hour)
                 .then(|| self.collabo_shooting_star_end_hour)
                 .or_else(|| Some(diff.collabo_shooting_star_end_hour))
                 .unwrap(),
-            collabo_shooting_star_start_hour: diff.collabo_shooting_star_start_hour
+            collabo_shooting_star_start_hour: diff
+                .collabo_shooting_star_start_hour
                 .eq(&self.collabo_shooting_star_start_hour)
                 .then(|| self.collabo_shooting_star_start_hour)
                 .or_else(|| Some(diff.collabo_shooting_star_start_hour))
                 .unwrap(),
             translate: self.translate.merge(&diff.translate),
-            collabo_ssfallout_flag_name: diff.collabo_ssfallout_flag_name.clone()
+            collabo_ssfallout_flag_name: diff
+                .collabo_ssfallout_flag_name
+                .clone()
                 .eq(&self.collabo_ssfallout_flag_name)
                 .then(|| self.collabo_ssfallout_flag_name.clone())
                 .or_else(|| Some(diff.collabo_ssfallout_flag_name.clone()))
                 .unwrap(),
-            collabo_ssopen_flag_name: diff.collabo_ssopen_flag_name.clone()
+            collabo_ssopen_flag_name: diff
+                .collabo_ssopen_flag_name
+                .clone()
                 .eq(&self.collabo_ssopen_flag_name)
                 .then(|| self.collabo_ssopen_flag_name.clone())
                 .or_else(|| Some(diff.collabo_ssopen_flag_name.clone()))
                 .unwrap(),
-            collabo_ssquest_flag: diff.collabo_ssquest_flag.clone()
+            collabo_ssquest_flag: diff
+                .collabo_ssquest_flag
+                .clone()
                 .eq(&self.collabo_ssquest_flag)
                 .then(|| self.collabo_ssquest_flag.clone())
                 .or_else(|| Some(diff.collabo_ssquest_flag.clone()))

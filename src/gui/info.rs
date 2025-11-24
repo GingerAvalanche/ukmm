@@ -12,9 +12,9 @@ use uk_mod::Manifest;
 #[allow(deprecated)]
 use uk_ui::egui_extras::RetainedImage;
 use uk_ui::{
+    PathNode,
     egui::{self, Align, Label, Layout, RichText, Ui},
     icons::IconButtonExt,
-    PathNode,
 };
 
 use super::{Component, LOCALIZATION};
@@ -48,13 +48,11 @@ impl ModInfo<'_> {
         let mut preview = PREVIEW.write();
         preview
             .entry(self.0.hash())
-            .or_insert_with(|| {
-                match load_preview(self.0) {
-                    Ok(pre) => pre,
-                    Err(e) => {
-                        log::error!("Error loading mod preview: {}", e);
-                        None
-                    }
+            .or_insert_with(|| match load_preview(self.0) {
+                Ok(pre) => pre,
+                Err(e) => {
+                    log::error!("Error loading mod preview: {}", e);
+                    None
                 }
             })
             .clone()
@@ -93,8 +91,10 @@ impl Component for ModInfo<'_> {
                     })
                 });
             });
-            ui.label(RichText::new(loc.get("Info_Description"))
-                .family(egui::FontFamily::Name("Bold".into())));
+            ui.label(
+                RichText::new(loc.get("Info_Description"))
+                    .family(egui::FontFamily::Name("Bold".into())),
+            );
             ui.add_space(4.);
             let md_cache = ui.data_mut(|d| {
                 d.get_temp_mut_or_default::<Arc<Mutex<egui_commonmark::CommonMarkCache>>>(
@@ -133,8 +133,10 @@ impl Component for ModInfo<'_> {
                 }
                 ui.add_space(4.0);
             }
-            ui.label(RichText::new(loc.get("Info_Manifest"))
-                .family(egui::FontFamily::Name("Bold".into())));
+            ui.label(
+                RichText::new(loc.get("Info_Manifest"))
+                    .family(egui::FontFamily::Name("Bold".into())),
+            );
             match mod_.manifest() {
                 Ok(manifest) => render_manifest(&manifest, ui),
                 Err(e) => {

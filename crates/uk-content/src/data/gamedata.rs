@@ -4,13 +4,13 @@ use anyhow::Context;
 use join_str::jstr;
 use lighter::lighter;
 use roead::{
-    byml::{map, Byml},
+    byml::{Byml, map},
     sarc::{Sarc, SarcWriter},
 };
 use serde::{Deserialize, Serialize};
 use uk_content_derive::BymlData;
 
-use crate::{prelude::*, util::DeleteMap, Result, UKError};
+use crate::{Result, UKError, prelude::*, util::DeleteMap};
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, BymlData)]
 pub struct FlagData {
@@ -45,7 +45,7 @@ pub struct FlagData {
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct GameData {
     pub data_type: String,
-    pub flags:     DeleteMap<String, FlagData>,
+    pub flags: DeleteMap<String, FlagData>,
 }
 
 impl TryFrom<&Byml> for GameData {
@@ -59,7 +59,7 @@ impl TryFrom<&Byml> for GameData {
                 .next()
                 .ok_or(UKError::MissingBymlKey("bgdata file missing data type key"))?
                 .clone(),
-            flags:     hash
+            flags: hash
                 .values()
                 .next()
                 .ok_or(UKError::MissingBymlKey("bgdata file missing data"))?
@@ -101,7 +101,7 @@ impl GameData {
         for _ in 0..total {
             out.push(GameData {
                 data_type: self.data_type.clone(),
-                flags:     iter.by_ref().take(4096).collect(),
+                flags: iter.by_ref().take(4096).collect(),
             });
         }
         out
@@ -117,7 +117,7 @@ impl Mergeable for GameData {
         );
         Self {
             data_type: self.data_type.clone(),
-            flags:     self.flags.diff(&other.flags),
+            flags: self.flags.diff(&other.flags),
         }
     }
 
@@ -129,7 +129,7 @@ impl Mergeable for GameData {
         );
         Self {
             data_type: self.data_type.clone(),
-            flags:     self.flags.merge(&diff.flags),
+            flags: self.flags.merge(&diff.flags),
         }
     }
 }
@@ -195,14 +195,12 @@ impl SarcSource<'_> {
             Self::Reader(sarc) => {
                 Box::new(sarc.files().filter_map(|f| f.name.map(|n| (n, f.data))))
             }
-            Self::Writer(sarcwriter) => {
-                Box::new(
-                    sarcwriter
-                        .files
-                        .iter()
-                        .map(|(f, d)| (f.as_ref(), d.as_ref())),
-                )
-            }
+            Self::Writer(sarcwriter) => Box::new(
+                sarcwriter
+                    .files
+                    .iter()
+                    .map(|(f, d)| (f.as_ref(), d.as_ref())),
+            ),
         }
     }
 
@@ -367,23 +365,23 @@ impl GameDataPack {
         Ok(GameDataPack {
             bool_data: GameData {
                 data_type: "bool_data".into(),
-                flags:     bool_data,
+                flags: bool_data,
             },
             revival_bool_data: GameData {
                 data_type: "bool_data".into(),
-                flags:     revival_bool_data,
+                flags: revival_bool_data,
             },
             s32_data: GameData {
                 data_type: "s32_data".into(),
-                flags:     s32_data,
+                flags: s32_data,
             },
             revival_s32_data: GameData {
                 data_type: "s32_data".into(),
-                flags:     revival_s32_data,
+                flags: revival_s32_data,
             },
             string32_data: GameData {
                 data_type: "string_data".into(),
-                flags:     string32_data,
+                flags: string32_data,
             },
             bool_array_data: extract_gamedata_by_type(sarc, "bool_array_data")?,
             s32_array_data: extract_gamedata_by_type(sarc, "s32_array_data")?,

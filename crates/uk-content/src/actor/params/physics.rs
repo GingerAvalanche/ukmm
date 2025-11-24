@@ -7,9 +7,10 @@ use uk_content_derive::ParamData;
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::{InfoSource, ParameterResource},
     prelude::*,
-    util, Result, UKError,
+    util,
 };
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize, ParamData)]
@@ -25,7 +26,7 @@ pub struct ContactInfoItem {
 
 pub struct ContactInfo {
     pub contact_point_info: Option<Vec<ContactInfoItem>>,
-    pub collision_info:     Option<Vec<ContactInfoItem>>,
+    pub collision_info: Option<Vec<ContactInfoItem>>,
 }
 
 impl TryFrom<&ParameterList> for ContactInfo {
@@ -66,7 +67,7 @@ impl TryFrom<&ParameterList> for ContactInfo {
                     })
                     .collect::<Result<_>>()?,
             ),
-            collision_info:     Some(
+            collision_info: Some(
                 (0..collision_count)
                     .map(|i| -> Result<ContactInfoItem> {
                         list.object(jstr!("CollisionInfo_{&lexical::to_string(i)}"))
@@ -148,7 +149,7 @@ impl Mergeable for ContactInfo {
             } else {
                 None
             },
-            collision_info:     if other.collision_info != self.collision_info {
+            collision_info: if other.collision_info != self.collision_info {
                 other.collision_info.clone()
             } else {
                 None
@@ -163,7 +164,7 @@ impl Mergeable for ContactInfo {
                 .as_ref()
                 .or(self.contact_point_info.as_ref())
                 .cloned(),
-            collision_info:     diff
+            collision_info: diff
                 .collision_info
                 .as_ref()
                 .or(self.collision_info.as_ref())
@@ -176,7 +177,7 @@ impl Mergeable for ContactInfo {
 
 pub struct CharacterController {
     pub header: ParameterObject,
-    pub forms:  BTreeMap<usize, ParameterList>,
+    pub forms: BTreeMap<usize, ParameterList>,
 }
 
 impl TryFrom<&ParameterList> for CharacterController {
@@ -192,7 +193,7 @@ impl TryFrom<&ParameterList> for CharacterController {
                     None,
                 ))?
                 .clone(),
-            forms:  list.lists.0.values().cloned().enumerate().collect(),
+            forms: list.lists.0.values().cloned().enumerate().collect(),
         })
     }
 }
@@ -201,7 +202,7 @@ impl From<CharacterController> for ParameterList {
     fn from(val: CharacterController) -> Self {
         Self {
             objects: objs!(2311816730 => val.header),
-            lists:   val
+            lists: val
                 .forms
                 .into_iter()
                 .map(|(i, form)| (jstr!("Form_{&lexical::to_string(i)}"), form))
@@ -214,14 +215,14 @@ impl Mergeable for CharacterController {
     fn diff(&self, other: &Self) -> Self {
         Self {
             header: util::diff_pobj(&self.header, &other.header),
-            forms:  util::simple_index_diff(&self.forms, &other.forms),
+            forms: util::simple_index_diff(&self.forms, &other.forms),
         }
     }
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
             header: util::merge_pobj(&self.header, &diff.header),
-            forms:  util::simple_index_merge(&self.forms, &diff.forms),
+            forms: util::simple_index_merge(&self.forms, &diff.forms),
         }
     }
 }

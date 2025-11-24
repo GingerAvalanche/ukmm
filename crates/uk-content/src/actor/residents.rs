@@ -1,13 +1,13 @@
 use roead::byml::{Byml, Map};
 use serde::{Deserialize, Serialize};
 
-use crate::{prelude::*, resource::SortedDeleteMap, Result, UKError};
+use crate::{Result, UKError, prelude::*, resource::SortedDeleteMap};
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 
 pub struct ResidentActorData {
     pub only_res: bool,
-    pub scale:    Option<Byml>,
+    pub scale: Option<Byml>,
 }
 
 impl TryFrom<&Map> for ResidentActorData {
@@ -21,7 +21,7 @@ impl TryFrom<&Map> for ResidentActorData {
                     "Resident actors entry missing only_res",
                 ))?
                 .as_bool()?,
-            scale:    val.get("scale").cloned(),
+            scale: val.get("scale").cloned(),
         })
     }
 }

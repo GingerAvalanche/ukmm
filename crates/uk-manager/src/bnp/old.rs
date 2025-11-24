@@ -1,10 +1,10 @@
 use std::{path::Path, str::FromStr};
 
-use anyhow_ext::{bail, Context, Result};
+use anyhow_ext::{Context, Result, bail};
 use fs_err as fs;
 use roead::{
     aamp::*,
-    byml::{map, Byml},
+    byml::{Byml, map},
     sarc::Sarc,
     types::*,
 };
@@ -22,29 +22,25 @@ fn value_to_byml(value: Value) -> Result<Byml> {
     let by = match value {
         Value::Null => Byml::Null,
         Value::Bool(v) => Byml::Bool(v),
-        Value::Number(v) => {
-            match v.as_i64() {
-                Some(v) => Byml::I32(v as i32),
-                None => {
-                    v.as_f64()
-                        .map(|v| Byml::Float(v as f32))
-                        .context("Invalid numeric value")?
-                }
-            }
-        }
+        Value::Number(v) => match v.as_i64() {
+            Some(v) => Byml::I32(v as i32),
+            None => v
+                .as_f64()
+                .map(|v| Byml::Float(v as f32))
+                .context("Invalid numeric value")?,
+        },
         Value::String(v) => Byml::String(v.into()),
         Value::Sequence(seq) => {
             Byml::Array(seq.into_iter().map(value_to_byml).collect::<Result<_>>()?)
         }
-        Value::Mapping(map) => {
-            map.into_iter()
-                .map(|(k, v)| -> Result<(smartstring::alias::String, Byml)> {
-                    let k = k.as_str().context("Bad BYML key")?.into();
-                    let v = value_to_byml(v)?;
-                    Ok((k, v))
-                })
-                .collect::<Result<Byml>>()?
-        }
+        Value::Mapping(map) => map
+            .into_iter()
+            .map(|(k, v)| -> Result<(smartstring::alias::String, Byml)> {
+                let k = k.as_str().context("Bad BYML key")?.into();
+                let v = value_to_byml(v)?;
+                Ok((k, v))
+            })
+            .collect::<Result<Byml>>()?,
         Value::Tagged(v) => {
             if v.tag == "u" {
                 Byml::U32(v.value.as_u64().context("Invalid u32")? as u32)
@@ -176,10 +172,9 @@ fn handle_aamp_pair<T>(
 ) -> Option<Result<(Name, T)>> {
     match key.as_str() {
         Some(k) => Some(from(value).map(|v| (Name::from_str(k), v))),
-        None => {
-            key.as_u64()
-                .map(|k| from(value).map(|v| (Name::from(k as u32), v)))
-        }
+        None => key
+            .as_u64()
+            .map(|k| from(value).map(|v| (Name::from(k as u32), v))),
     }
 }
 

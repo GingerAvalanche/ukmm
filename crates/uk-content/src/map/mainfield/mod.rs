@@ -1,9 +1,12 @@
 use anyhow::Context;
 use itertools::Itertools;
-use roead::byml::{map, Byml};
+use roead::byml::{Byml, map};
 use smartstring::alias::String;
 
-use crate::{prelude::Mergeable, util::{parsers::try_get_vecf, DeleteMap}};
+use crate::{
+    prelude::Mergeable,
+    util::{DeleteMap, parsers::try_get_vecf},
+};
 
 pub mod collab_anchor;
 pub mod korok_location;
@@ -27,9 +30,9 @@ pub struct MapUnit {
 impl<'a> FromIterator<&'a str> for MapUnit {
     fn from_iter<T: IntoIterator<Item = &'a str>>(iter: T) -> Self {
         let mut it = iter.into_iter();
-        let row = it.next()
-            .expect("iter must have 2 elements");
-        let col = it.next()
+        let row = it.next().expect("iter must have 2 elements");
+        let col = it
+            .next()
             .expect("iter must have 2 elements")
             .parse::<u32>()
             .expect("MapUnit third character must be number");
@@ -141,28 +144,26 @@ impl From<&Map> for Byml {
     }
 }
 
-
 #[derive(Debug, Clone, Default, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct MapAndUnit {
-    pub map:    Map,
-    pub unit:   MapUnit,
+    pub map: Map,
+    pub unit: MapUnit,
 }
 
 impl<'a> FromIterator<&'a str> for MapAndUnit {
     fn from_iter<T: IntoIterator<Item = &'a str>>(iter: T) -> Self {
         let mut it = iter.into_iter();
-        let map = it.next()
+        let map = it
+            .next()
             .expect("iter must have 2 elements")
             .try_into()
             .expect("MapAndUnit first part must be Map");
-        let unit = it.next()
+        let unit = it
+            .next()
             .expect("iter must have 2 elements")
             .try_into()
             .expect("MapAndUnit second part must be MapUnit");
-        Self {
-            map,
-            unit,
-        }
+        Self { map, unit }
     }
 }
 
@@ -173,7 +174,10 @@ impl TryFrom<&str> for MapAndUnit {
         let parts = value.split('/');
         match parts.try_len().unwrap() {
             2 => Ok(parts.collect()),
-            _ => Err(anyhow::anyhow!("MapAndUnit must contain 2 parts: {}", parts.try_len().unwrap())),
+            _ => Err(anyhow::anyhow!(
+                "MapAndUnit must contain 2 parts: {}",
+                parts.try_len().unwrap()
+            )),
         }
     }
 }
@@ -258,19 +262,23 @@ impl From<&AreaShape> for Byml {
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct ScaleTranslate {
-    pub scale:      DeleteMap<char, f32>,
-    pub translate:  DeleteMap<char, f32>,
+    pub scale: DeleteMap<char, f32>,
+    pub translate: DeleteMap<char, f32>,
 }
 
 impl ScaleTranslate {
     pub fn id(&self) -> String {
-        roead::aamp::hash_name(
-            &format!(
-                "{}{}",
-                self.translate.values().map(|v| (v * 100000.0f32).to_string()).join(""),
-                self.scale.values().map(|v| (v * 100000.0f32).to_string()).join(""),
-            )
-        )
+        roead::aamp::hash_name(&format!(
+            "{}{}",
+            self.translate
+                .values()
+                .map(|v| (v * 100000.0f32).to_string())
+                .join(""),
+            self.scale
+                .values()
+                .map(|v| (v * 100000.0f32).to_string())
+                .join(""),
+        ))
         .to_string()
         .into()
     }
@@ -280,14 +288,17 @@ impl TryFrom<&Byml> for ScaleTranslate {
     type Error = anyhow::Error;
 
     fn try_from(value: &Byml) -> anyhow::Result<Self> {
-        let map = value.as_map().context("ScaleTranslate node must be HashMap")?;
+        let map = value
+            .as_map()
+            .context("ScaleTranslate node must be HashMap")?;
         Ok(Self {
-            scale: try_get_vecf(map.get("Scale")
-                .context("ScaleTranslate must have Scale")?)
+            scale: try_get_vecf(map.get("Scale").context("ScaleTranslate must have Scale")?)
                 .context("Invalid ScaleTranslate Scale")?,
-            translate: try_get_vecf(map.get("Translate")
-                .context("ScaleTranslate must have Translate")?)
-                .context("Invalid ScaleTranslate Translate")?,
+            translate: try_get_vecf(
+                map.get("Translate")
+                    .context("ScaleTranslate must have Translate")?,
+            )
+            .context("Invalid ScaleTranslate Translate")?,
         })
     }
 }

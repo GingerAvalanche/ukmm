@@ -2,14 +2,14 @@ use join_str::jstr;
 use roead::aamp::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{prelude::*, util::DeleteMap, Result, UKError};
+use crate::{Result, UKError, prelude::*, util::DeleteMap};
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 
 pub struct ChemicalRes {
-    pub world:    DeleteMap<String256, ParameterObject>,
+    pub world: DeleteMap<String256, ParameterObject>,
     pub material: DeleteMap<String256, ParameterObject>,
-    pub element:  DeleteMap<String256, ParameterObject>,
+    pub element: DeleteMap<String256, ParameterObject>,
 }
 
 impl TryFrom<&ParameterIO> for ChemicalRes {
@@ -37,9 +37,9 @@ impl TryFrom<&ParameterIO> for ChemicalRes {
         };
 
         Ok(Self {
-            world:    parse_res("world")?,
+            world: parse_res("world")?,
             material: parse_res("material")?,
-            element:  parse_res("element")?,
+            element: parse_res("element")?,
         })
     }
 }
@@ -63,17 +63,17 @@ impl From<ChemicalRes> for ParameterIO {
 impl Mergeable for ChemicalRes {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            world:    self.world.diff(&other.world),
+            world: self.world.diff(&other.world),
             material: self.material.diff(&other.material),
-            element:  self.element.diff(&other.element),
+            element: self.element.diff(&other.element),
         }
     }
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            world:    self.world.merge(&diff.world),
+            world: self.world.merge(&diff.world),
             material: self.material.merge(&diff.material),
-            element:  self.element.merge(&diff.element),
+            element: self.element.merge(&diff.element),
         }
     }
 }

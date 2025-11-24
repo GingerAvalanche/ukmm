@@ -1,5 +1,5 @@
 use std::{
-    io::{stdin, stdout, Write},
+    io::{Write, stdin, stdout},
     option::Option,
     path::{Path, PathBuf},
 };
@@ -7,7 +7,7 @@ use std::{
 use anyhow_ext::{Context, Result};
 use smartstring::alias::String;
 use uk_manager::{core, mods::LookupMod, settings::Platform};
-use uk_mod::{unpack::ModReader, Manifest, Meta};
+use uk_mod::{Manifest, Meta, unpack::ModReader};
 
 use crate::gui::{package, tasks};
 
@@ -82,20 +82,20 @@ pub enum UkmmCmd {
 
 #[derive(Debug)]
 pub struct Install {
-    pub path:    PathBuf,
+    pub path: PathBuf,
     pub profile: Option<String>,
 }
 
 #[derive(Debug)]
 pub struct Package {
-    pub path:   PathBuf,
+    pub path: PathBuf,
     pub output: PathBuf,
-    pub meta:   PathBuf,
+    pub meta: PathBuf,
 }
 
 #[derive(Debug)]
 pub struct Uninstall {
-    pub index:   Option<usize>,
+    pub index: Option<usize>,
     pub profile: Option<String>,
 }
 
@@ -140,7 +140,7 @@ macro_rules! input {
 #[derive(Debug)]
 pub struct Runner {
     core: core::Manager,
-    cli:  Ukmm,
+    cli: Ukmm,
 }
 
 impl Runner {
@@ -154,26 +154,23 @@ impl Runner {
     fn check_mod(&self, path: &Path) -> Result<Option<PathBuf>> {
         let (mod_, path) = match ModReader::open(path, vec![]) {
             Ok(mod_) => (mod_, path.to_path_buf()),
-            Err(e) => {
-                match uk_manager::mods::convert_gfx(&self.core, path, None) {
-                    Ok(path) => {
-                        log::info!("Opening mod at {}", path.display());
-                        (
-                            ModReader::open(&path, vec![])
-                                .context("Failed to open converted mod")?,
-                            path,
-                        )
-                    }
-                    Err(e2) => {
-                        anyhow_ext::bail!(
-                            "Could not open mod. Error when attempting to open as UKMM mod: {}. \
-                             Error when attempting to open as legacy mod: {}.",
-                            e,
-                            e2
-                        )
-                    }
+            Err(e) => match uk_manager::mods::convert_gfx(&self.core, path, None) {
+                Ok(path) => {
+                    log::info!("Opening mod at {}", path.display());
+                    (
+                        ModReader::open(&path, vec![]).context("Failed to open converted mod")?,
+                        path,
+                    )
                 }
-            }
+                Err(e2) => {
+                    anyhow_ext::bail!(
+                        "Could not open mod. Error when attempting to open as UKMM mod: {}. \
+                             Error when attempting to open as legacy mod: {}.",
+                        e,
+                        e2
+                    )
+                }
+            },
         };
         if !mod_.meta.options.is_empty() {
             anyhow_ext::bail!(
@@ -232,8 +229,8 @@ impl Runner {
                 println!("Packaging mod...");
                 let builder = package::ModPackerBuilder {
                     source: pkg.path.clone(),
-                    dest:   pkg.output.clone(),
-                    meta:   Meta::parse(&pkg.meta)?,
+                    dest: pkg.output.clone(),
+                    meta: Meta::parse(&pkg.meta)?,
                 };
                 tasks::package_mod(&self.core, builder)?;
                 println!("Done!");

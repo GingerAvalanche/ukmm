@@ -3,7 +3,10 @@ use itertools::Itertools;
 use roead::byml::Byml;
 use smartstring::alias::String;
 
-use crate::{prelude::Mergeable, util::{parsers::try_get_vecf, DeleteMap, HashMap}};
+use crate::{
+    prelude::Mergeable,
+    util::{DeleteMap, HashMap, parsers::try_get_vecf},
+};
 
 use super::MapAndUnit;
 
@@ -102,24 +105,25 @@ impl From<&LocationIcon> for Byml {
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct LocationMarker {
-    pub icon:               Option<LocationIcon>,
-    pub message_id:         Option<String>,
-    pub priority:           Option<i32>,
-    pub save_flag:          Option<String>,
-    pub translate:          DeleteMap<char, f32>,
+    pub icon: Option<LocationIcon>,
+    pub message_id: Option<String>,
+    pub priority: Option<i32>,
+    pub save_flag: Option<String>,
+    pub translate: DeleteMap<char, f32>,
     pub warp_dest_map_name: Option<MapAndUnit>,
     pub warp_dest_pos_name: Option<String>,
 }
 
 impl LocationMarker {
     pub fn id(&self) -> String {
-        roead::aamp::hash_name(
-            &format!(
-                "{}{}",
-                self.translate.values().map(|v| (v * 100000.0f32).to_string()).join(""),
-                self.message_id.clone().unwrap_or_default()
-            )
-        )
+        roead::aamp::hash_name(&format!(
+            "{}{}",
+            self.translate
+                .values()
+                .map(|v| (v * 100000.0f32).to_string())
+                .join(""),
+            self.message_id.clone().unwrap_or_default()
+        ))
         .to_string()
         .into()
     }
@@ -129,41 +133,53 @@ impl TryFrom<&Byml> for LocationMarker {
     type Error = anyhow::Error;
 
     fn try_from(value: &Byml) -> anyhow::Result<Self> {
-        let map = value.as_map()
+        let map = value
+            .as_map()
             .context("TargetPosMarker node must be HashMap")?;
         Ok(Self {
-            icon: map.get("Icon")
-                .map(|b| b.try_into()
-                    .context("LocationMarker Icon invalid")
-                )
+            icon: map
+                .get("Icon")
+                .map(|b| b.try_into().context("LocationMarker Icon invalid"))
                 .transpose()?,
-            message_id: map.get("MessageID")
-                .map(|b| b.as_string()
-                    .context("LocationMarker MessageID must be String")
-                )
+            message_id: map
+                .get("MessageID")
+                .map(|b| {
+                    b.as_string()
+                        .context("LocationMarker MessageID must be String")
+                })
                 .transpose()?
                 .map(|s| s.clone()),
-            priority: Some(map.get("Priority")
-                .context("LocationMarker must have Priority")?
-                .as_i32()
-                .context("LocationMarker Priority must be Int")?),
-            save_flag: Some(map.get("SaveFlag")
-                .context("LocationMarker must have SaveFlag")?
-                .as_string()
-                .context("LocationMarker SaveFlag must be String")?
-                .clone()),
-            translate: try_get_vecf(map.get("Translate")
-                .context("LocationMarker must have Translate")?)
-                .context("Invalid LocationMarker Translate")?,
-            warp_dest_map_name: map.get("WarpDestMapName")
-                .map(|b| b.try_into()
-                    .context("Invalid LocationMarker WarpDestMapName")
-                )
+            priority: Some(
+                map.get("Priority")
+                    .context("LocationMarker must have Priority")?
+                    .as_i32()
+                    .context("LocationMarker Priority must be Int")?,
+            ),
+            save_flag: Some(
+                map.get("SaveFlag")
+                    .context("LocationMarker must have SaveFlag")?
+                    .as_string()
+                    .context("LocationMarker SaveFlag must be String")?
+                    .clone(),
+            ),
+            translate: try_get_vecf(
+                map.get("Translate")
+                    .context("LocationMarker must have Translate")?,
+            )
+            .context("Invalid LocationMarker Translate")?,
+            warp_dest_map_name: map
+                .get("WarpDestMapName")
+                .map(|b| {
+                    b.try_into()
+                        .context("Invalid LocationMarker WarpDestMapName")
+                })
                 .transpose()?,
-            warp_dest_pos_name: map.get("WarpDestPosName")
-                .map(|b| b.as_string()
-                    .context("LocationMarker WarpDestPosName must be String")
-                )
+            warp_dest_pos_name: map
+                .get("WarpDestPosName")
+                .map(|b| {
+                    b.as_string()
+                        .context("LocationMarker WarpDestPosName must be String")
+                })
                 .transpose()?
                 .map(|s| s.clone()),
         })
@@ -183,10 +199,16 @@ impl From<LocationMarker> for Byml {
         };
         map.insert("Priority".into(), value.priority.unwrap().into());
         map.insert("SaveFlag".into(), value.save_flag.unwrap().into());
-        map.insert("Translate".into(), Byml::Map(value.translate
-            .iter()
-            .map(|(k, v)| (k.to_string().into(), Byml::Float(*v)))
-            .collect::<HashMap<String, Byml>>()));
+        map.insert(
+            "Translate".into(),
+            Byml::Map(
+                value
+                    .translate
+                    .iter()
+                    .map(|(k, v)| (k.to_string().into(), Byml::Float(*v)))
+                    .collect::<HashMap<String, Byml>>(),
+            ),
+        );
         match &value.warp_dest_map_name {
             Some(i) => map.insert("WarpDestMapName".into(), i.into()),
             None => None,
@@ -202,28 +224,30 @@ impl From<LocationMarker> for Byml {
 impl Mergeable for LocationMarker {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            icon: other.icon
-                .ne(&self.icon)
-                .then(|| other.icon)
-                .unwrap(),
-            message_id: other.message_id
+            icon: other.icon.ne(&self.icon).then(|| other.icon).unwrap(),
+            message_id: other
+                .message_id
                 .ne(&self.message_id)
                 .then(|| other.message_id.clone())
                 .unwrap(),
-            priority: other.priority
+            priority: other
+                .priority
                 .ne(&self.priority)
                 .then(|| other.priority)
                 .unwrap(),
-            save_flag: other.save_flag
+            save_flag: other
+                .save_flag
                 .ne(&self.save_flag)
                 .then(|| other.save_flag.clone())
                 .unwrap(),
             translate: self.translate.diff(&other.translate),
-            warp_dest_map_name: other.warp_dest_map_name
+            warp_dest_map_name: other
+                .warp_dest_map_name
                 .ne(&self.warp_dest_map_name)
                 .then(|| other.warp_dest_map_name.clone())
                 .unwrap(),
-            warp_dest_pos_name: other.warp_dest_pos_name
+            warp_dest_pos_name: other
+                .warp_dest_pos_name
                 .ne(&self.warp_dest_pos_name)
                 .then(|| other.warp_dest_pos_name.clone())
                 .unwrap(),
@@ -232,33 +256,39 @@ impl Mergeable for LocationMarker {
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            icon: diff.icon
+            icon: diff
+                .icon
                 .eq(&self.icon)
                 .then(|| self.icon)
                 .or_else(|| Some(diff.icon))
                 .unwrap(),
-            message_id: diff.message_id
+            message_id: diff
+                .message_id
                 .eq(&self.message_id)
                 .then(|| self.message_id.clone())
                 .or_else(|| Some(diff.message_id.clone()))
                 .unwrap(),
-            priority: diff.priority
+            priority: diff
+                .priority
                 .eq(&self.priority)
                 .then(|| self.priority)
                 .or_else(|| Some(diff.priority))
                 .unwrap(),
-            save_flag: diff.save_flag
+            save_flag: diff
+                .save_flag
                 .eq(&self.save_flag)
                 .then(|| self.save_flag.clone())
                 .or_else(|| Some(diff.save_flag.clone()))
                 .unwrap(),
             translate: self.translate.merge(&diff.translate),
-            warp_dest_map_name: diff.warp_dest_map_name
+            warp_dest_map_name: diff
+                .warp_dest_map_name
                 .eq(&self.warp_dest_map_name)
                 .then(|| self.warp_dest_map_name.clone())
                 .or_else(|| Some(diff.warp_dest_map_name.clone()))
                 .unwrap(),
-            warp_dest_pos_name: diff.warp_dest_pos_name
+            warp_dest_pos_name: diff
+                .warp_dest_pos_name
                 .eq(&self.warp_dest_pos_name)
                 .then(|| self.warp_dest_pos_name.clone())
                 .or_else(|| Some(diff.warp_dest_pos_name.clone()))

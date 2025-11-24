@@ -9,14 +9,12 @@ use log::Record;
 use parking_lot::Mutex;
 use uk_manager::settings::Settings;
 
-pub static LOGGER: LazyLock<Logger> = LazyLock::new(|| {
-    Logger {
-        text: Default::default(),
-        record_buf: Arc::new(Mutex::new(String::with_capacity(512))),
-        msg: Default::default(),
-        inner: &egui_logger::EguiLogger,
-        file: OnceLock::new(),
-    }
+pub static LOGGER: LazyLock<Logger> = LazyLock::new(|| Logger {
+    text: Default::default(),
+    record_buf: Arc::new(Mutex::new(String::with_capacity(512))),
+    msg: Default::default(),
+    inner: &egui_logger::EguiLogger,
+    file: OnceLock::new(),
 });
 
 pub fn init() {

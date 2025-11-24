@@ -2,16 +2,16 @@ use anyhow::Context;
 use join_str::jstr;
 use roead::{
     aamp::hash_name,
-    byml::{map, Byml},
+    byml::{Byml, map},
     sarc::{Sarc, SarcWriter},
 };
 use serde::{Deserialize, Serialize};
 use uk_content_derive::BymlData;
 
 use crate::{
+    Result, UKError,
     prelude::*,
     util::{HashMap, SortedDeleteSet},
-    Result, UKError,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, BymlData)]
@@ -79,7 +79,7 @@ impl Ord for Flag {
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct SaveData {
     pub header: SaveDataHeader,
-    pub flags:  SortedDeleteSet<Flag>,
+    pub flags: SortedDeleteSet<Flag>,
 }
 
 impl TryFrom<&Byml> for SaveData {
@@ -96,7 +96,7 @@ impl TryFrom<&Byml> for SaveData {
                 .first()
                 .ok_or(UKError::MissingBymlKey("bgsvdata missing header"))?
                 .try_into()?,
-            flags:  array
+            flags: array
                 .get(1)
                 .ok_or(UKError::MissingBymlKey("bgsvdata missing flag array"))?
                 .as_array()?
@@ -140,7 +140,7 @@ impl Mergeable for SaveData {
         );
         Self {
             header: self.header.clone(),
-            flags:  self.flags.diff(&other.flags),
+            flags: self.flags.diff(&other.flags),
         }
     }
 
@@ -152,7 +152,7 @@ impl Mergeable for SaveData {
         );
         Self {
             header: self.header.clone(),
-            flags:  self.flags.merge(&diff.flags),
+            flags: self.flags.merge(&diff.flags),
         }
     }
 }
@@ -165,7 +165,7 @@ impl SaveData {
         for _ in 0..total {
             out.push(Self {
                 header: self.header.clone(),
-                flags:  iter.by_ref().take(8192).collect(),
+                flags: iter.by_ref().take(8192).collect(),
             });
         }
         out

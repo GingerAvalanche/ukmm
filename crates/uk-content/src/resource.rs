@@ -26,7 +26,12 @@ pub use crate::{
     event::{info::EventInfo, residents::ResidentEvents},
     font::FontArchive,
     layout::LayoutArchive,
-    map::{lazy::LazyTraverseList, mainfield::location::Location, static_::{MainStatic, Static}, unit::MapUnit},
+    map::{
+        lazy::LazyTraverseList,
+        mainfield::location::Location,
+        static_::{MainStatic, Static},
+        unit::MapUnit,
+    },
     message::MessagePack,
     quest::product::QuestProduct,
     sound::barslist::BarslistInfo,
@@ -547,7 +552,9 @@ impl MergeableResource {
         } else if Lod::path_matches(name) {
             Ok(Some(Self::Lod(Box::new(Lod::from_binary(data)?))))
         } else if MainStatic::path_matches(name) {
-            Ok(Some(Self::MainStatic(Box::new(MainStatic::from_binary(data)?))))
+            Ok(Some(Self::MainStatic(Box::new(MainStatic::from_binary(
+                data,
+            )?))))
         } else if MapUnit::path_matches(name) {
             Ok(Some(Self::MapUnit(Box::new(MapUnit::from_binary(data)?))))
         } else if MessagePack::path_matches(name) {
@@ -611,22 +618,22 @@ impl MergeableResource {
                 data,
             )?))))
         } else if data.len() > 4 && &data[0..4] == b"AAMP" {
-            Ok(Some(Self::GenericAamp(Box::new(
-                ParameterIO::from_binary(data)?,
-            ))))
-        } else if data.len() > 4 && matches!(&data[..2], b"BY" | b"YB") &&
-            (as_u16_be(&data[2..4]) < 8 || as_u16_le(&data[2..4]) < 8) {
+            Ok(Some(Self::GenericAamp(Box::new(ParameterIO::from_binary(
+                data,
+            )?))))
+        } else if data.len() > 4
+            && matches!(&data[..2], b"BY" | b"YB")
+            && (as_u16_be(&data[2..4]) < 8 || as_u16_le(&data[2..4]) < 8)
+        {
             Ok(Some(Self::GenericByml(Box::new(Byml::from_binary(data)?))))
         } else {
             Ok(None)
         };
         match result {
-            Err(e) => {
-                Ok(Some(Self::BinaryOverride(Box::new((
-                    data.to_vec(),
-                    e.to_string().into(),
-                )))))
-            }
+            Err(e) => Ok(Some(Self::BinaryOverride(Box::new((
+                data.to_vec(),
+                e.to_string().into(),
+            ))))),
             ok => ok,
         }
     }
@@ -694,13 +701,11 @@ impl MergeableResource {
 }
 
 fn as_u16_be(array: &[u8]) -> u16 {
-    ((array[1] as u16) <<  0) +
-    ((array[0] as u16) <<  8)
+    ((array[1] as u16) << 0) + ((array[0] as u16) << 8)
 }
 
 fn as_u16_le(array: &[u8]) -> u16 {
-    ((array[0] as u16) <<  0) +
-    ((array[1] as u16) <<  8)
+    ((array[0] as u16) << 0) + ((array[1] as u16) << 8)
 }
 
 pub trait ResourceRegister {
@@ -722,21 +727,21 @@ impl ResourceRegister for std::cell::RefCell<BTreeMap<String, ResourceData>> {
 #[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
 pub struct SarcMap {
     pub alignment: usize,
-    pub files:     SortedDeleteSet<String>,
+    pub files: SortedDeleteSet<String>,
 }
 
 impl Mergeable for SarcMap {
     fn diff(&self, other: &Self) -> Self {
         Self {
             alignment: self.alignment,
-            files:     self.files.diff(&other.files),
+            files: self.files.diff(&other.files),
         }
     }
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
             alignment: self.alignment,
-            files:     self.files.merge(&diff.files),
+            files: self.files.merge(&diff.files),
         }
     }
 }
@@ -746,7 +751,7 @@ impl SarcMap {
         let sarc = Sarc::new(data.as_ref())?;
         let sarc_map = Self {
             alignment: sarc.guess_min_alignment(),
-            files:     sarc
+            files: sarc
                 .files()
                 .map(|file| -> Result<String> {
                     Ok(file.name().context("SARC file missing name")?.into())

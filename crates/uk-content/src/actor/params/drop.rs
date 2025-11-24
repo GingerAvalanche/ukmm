@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::{InfoSource, ParameterResource},
     prelude::*,
     util::{IndexMap, IteratorExt},
-    Result, UKError,
 };
 
 #[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
@@ -44,10 +44,10 @@ impl From<DropTable> for ParameterIO {
                     );
                     objs
                 },
-                lists:   Default::default(),
+                lists: Default::default(),
             },
-            version:    0,
-            data_type:  "xml".into(),
+            version: 0,
+            data_type: "xml".into(),
         }
     }
 }

@@ -3,7 +3,10 @@ use itertools::Itertools;
 use roead::byml::Byml;
 use smartstring::alias::String;
 
-use crate::{prelude::Mergeable, util::{parsers::try_get_vecf, DeleteMap, HashMap}};
+use crate::{
+    prelude::Mergeable,
+    util::{DeleteMap, HashMap, parsers::try_get_vecf},
+};
 
 use super::MapUnit;
 
@@ -68,22 +71,23 @@ impl From<&PlayerState> for Byml {
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct StartPos {
-    pub map:            Option<MapUnit>,
-    pub player_state:   Option<PlayerState>,
-    pub pos_name:       Option<String>,
-    pub rotate:         DeleteMap<char, f32>,
-    pub translate:      DeleteMap<char, f32>,
+    pub map: Option<MapUnit>,
+    pub player_state: Option<PlayerState>,
+    pub pos_name: Option<String>,
+    pub rotate: DeleteMap<char, f32>,
+    pub translate: DeleteMap<char, f32>,
 }
 
 impl StartPos {
     pub fn id(&self) -> String {
-        roead::aamp::hash_name(
-            &format!(
-                "{}{}",
-                self.translate.values().map(|v| (v * 100000.0f32).to_string()).join(""),
-                self.pos_name.clone().unwrap_or_default()
-            )
-        )
+        roead::aamp::hash_name(&format!(
+            "{}{}",
+            self.translate
+                .values()
+                .map(|v| (v * 100000.0f32).to_string())
+                .join(""),
+            self.pos_name.clone().unwrap_or_default()
+        ))
         .to_string()
         .into()
     }
@@ -93,30 +97,32 @@ impl TryFrom<&Byml> for StartPos {
     type Error = anyhow::Error;
 
     fn try_from(value: &Byml) -> anyhow::Result<Self> {
-        let map = value.as_map()
-            .context("StartPos node must be HashMap")?;
+        let map = value.as_map().context("StartPos node must be HashMap")?;
         Ok(Self {
-            map: Some(map.get("Map")
-                .context("StartPos must have Map")?
-                .as_string()
-                .context("StartPos Map must be String")?
-                .as_str()
-                .into()),
-            player_state: map.get("PlayerState")
+            map: Some(
+                map.get("Map")
+                    .context("StartPos must have Map")?
+                    .as_string()
+                    .context("StartPos Map must be String")?
+                    .as_str()
+                    .into(),
+            ),
+            player_state: map
+                .get("PlayerState")
                 .map(|b| b.try_into().context("Invalid PlayerState"))
                 .transpose()?,
-            pos_name: map.get("PosName")
-                .map(|b| b.as_string()
-                    .context("StartPos PosName must be String")
-                )
+            pos_name: map
+                .get("PosName")
+                .map(|b| b.as_string().context("StartPos PosName must be String"))
                 .transpose()?
                 .map(|s| s.clone()),
-            rotate: try_get_vecf(map.get("Rotate")
-                .context("StartPos must have Rotate")?)
+            rotate: try_get_vecf(map.get("Rotate").context("StartPos must have Rotate")?)
                 .context("Invalid StartPos Rotate")?,
-            translate: try_get_vecf(map.get("Translate")
-                .context("StartPos must have Translate")?)
-                .context("Invalid StartPos Translate")?,
+            translate: try_get_vecf(
+                map.get("Translate")
+                    .context("StartPos must have Translate")?,
+            )
+            .context("Invalid StartPos Translate")?,
         })
     }
 }
@@ -133,14 +139,26 @@ impl From<StartPos> for Byml {
             Some(p) => map.insert("PosName".into(), p.into()),
             None => None,
         };
-        map.insert("Rotate".into(), Byml::Map(value.rotate
-            .iter()
-            .map(|(k, v)| (k.to_string().into(), Byml::Float(*v)))
-            .collect::<crate::util::HashMap<String, Byml>>()));
-        map.insert("Translate".into(), Byml::Map(value.translate
-            .iter()
-            .map(|(k, v)| (k.to_string().into(), Byml::Float(*v)))
-            .collect::<crate::util::HashMap<String, Byml>>()));
+        map.insert(
+            "Rotate".into(),
+            Byml::Map(
+                value
+                    .rotate
+                    .iter()
+                    .map(|(k, v)| (k.to_string().into(), Byml::Float(*v)))
+                    .collect::<crate::util::HashMap<String, Byml>>(),
+            ),
+        );
+        map.insert(
+            "Translate".into(),
+            Byml::Map(
+                value
+                    .translate
+                    .iter()
+                    .map(|(k, v)| (k.to_string().into(), Byml::Float(*v)))
+                    .collect::<crate::util::HashMap<String, Byml>>(),
+            ),
+        );
         Byml::Map(map)
     }
 }
@@ -148,15 +166,14 @@ impl From<StartPos> for Byml {
 impl Mergeable for StartPos {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            map: other.map
-                .ne(&self.map)
-                .then(|| other.map.clone())
-                .unwrap(),
-            player_state: other.player_state
+            map: other.map.ne(&self.map).then(|| other.map.clone()).unwrap(),
+            player_state: other
+                .player_state
                 .ne(&self.player_state)
                 .then(|| other.player_state)
                 .unwrap(),
-            pos_name: other.pos_name
+            pos_name: other
+                .pos_name
                 .ne(&self.pos_name)
                 .then(|| other.pos_name.clone())
                 .unwrap(),
@@ -167,17 +184,20 @@ impl Mergeable for StartPos {
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            map: diff.map
+            map: diff
+                .map
                 .eq(&self.map)
                 .then(|| self.map.clone())
                 .or_else(|| Some(diff.map.clone()))
                 .unwrap(),
-            player_state: diff.player_state
+            player_state: diff
+                .player_state
                 .eq(&self.player_state)
                 .then(|| self.player_state)
                 .or_else(|| Some(diff.player_state))
                 .unwrap(),
-            pos_name: diff.pos_name
+            pos_name: diff
+                .pos_name
                 .eq(&self.pos_name)
                 .then(|| self.pos_name.clone())
                 .or_else(|| Some(diff.pos_name.clone()))

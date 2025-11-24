@@ -4,18 +4,18 @@ use serde::{Deserialize, Serialize};
 use smartstring::{LazyCompact, SmartString};
 
 use crate::{
-    util::{DeleteVec, HashMap},
     Result, UKError,
+    util::{DeleteVec, HashMap},
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 
 pub struct SingleRecipe {
     pub actors: Option<DeleteVec<i32>>,
-    pub hb:     Option<i32>,
-    pub num:    i32,
+    pub hb: Option<i32>,
+    pub num: i32,
     pub recipe: i32,
-    pub tags:   Option<DeleteVec<i32>>,
+    pub tags: Option<DeleteVec<i32>>,
 }
 
 impl TryFrom<&Byml> for SingleRecipe {
@@ -33,11 +33,11 @@ impl TryFrom<&Byml> for SingleRecipe {
                         .collect()
                 })
                 .transpose()?,
-            hb:     hash
+            hb: hash
                 .get("HB")
                 .map(|i| i.as_i32().context("HB not int"))
                 .transpose()?,
-            num:    hash
+            num: hash
                 .get("Num")
                 .ok_or(UKError::MissingBymlKey("SingleRecipe missing num"))?
                 .as_i32()?,
@@ -45,7 +45,7 @@ impl TryFrom<&Byml> for SingleRecipe {
                 .get("Recipe")
                 .ok_or(UKError::MissingBymlKey("SingleRecipe missing recipe actor"))?
                 .as_int::<i32>()?,
-            tags:   hash
+            tags: hash
                 .get("Tags")
                 .map(|arr| -> Result<_> {
                     arr.as_array()?

@@ -19,8 +19,8 @@ use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
 use uk_content::{constants::Language, platform_prefixes};
 use uk_mod::{
-    unpack::{ModReader, ModUnpacker},
     Manifest,
+    unpack::{ModReader, ModUnpacker},
 };
 
 use crate::{
@@ -31,7 +31,7 @@ use crate::{
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct PendingLog {
-    files:  Manifest,
+    files: Manifest,
     delete: Manifest,
 }
 
@@ -123,8 +123,10 @@ impl Manager {
                             let path = file.path();
                             let rel = path.strip_prefix(&source).unwrap();
                             let dest = dest.join(rel);
-                            if !source.is_dir() && (!dest.exists()
-                                || dest.metadata().ok()?.modified().ok()? < meta.modified().ok()?)
+                            if !source.is_dir()
+                                && (!dest.exists()
+                                    || dest.metadata().ok()?.modified().ok()?
+                                        < meta.modified().ok()?)
                             {
                                 Some(rel.to_slash_lossy().into())
                             } else {
@@ -138,7 +140,7 @@ impl Manager {
 
         *self.pending_files.write() = Manifest {
             content_files: collect_files(content),
-            aoc_files:     collect_files(aoc),
+            aoc_files: collect_files(aoc),
         };
 
         let collect_deletes = |root: &str| -> BTreeSet<String> {
@@ -160,7 +162,7 @@ impl Manager {
 
         *self.pending_delete.write() = Manifest {
             content_files: collect_deletes(content),
-            aoc_files:     collect_deletes(aoc),
+            aoc_files: collect_deletes(aoc),
         };
 
         Ok(())
@@ -171,7 +173,7 @@ impl Manager {
             Self::log_path(&self.settings.upgrade().unwrap().read()),
             serde_yaml::to_string(&PendingLog {
                 delete: self.pending_delete.read().clone(),
-                files:  self.pending_files.read().clone(),
+                files: self.pending_files.read().clone(),
             })?,
         )?;
         Ok(())
@@ -197,7 +199,7 @@ impl Manager {
 
         // Determine src and dest folders
         let (content, aoc) = platform_prefixes(settings.current_mode.into());
-        let src_content  = settings.merged_dir().join(content);
+        let src_content = settings.merged_dir().join(content);
         let src_aoc = settings.merged_dir().join(aoc);
         let (dest_content, dest_aoc) = config.final_output_paths(settings.current_mode.into());
         // Remove old behavior
@@ -212,7 +214,7 @@ impl Manager {
 
             for (src, dest, type_) in [
                 (src_content, dest_content.clone(), "content"),
-                (src_aoc, dest_aoc, "aoc")
+                (src_aoc, dest_aoc, "aoc"),
             ] {
                 let (actual_src, actual_dest) = match (type_, settings.current_mode) {
                     ("aoc", Platform::WiiU) => (src.parent().unwrap(), dest.parent().unwrap()),
@@ -237,8 +239,10 @@ impl Manager {
                     log::info!("No {} files, removing link", type_);
                     util::remove_symlink(actual_dest)
                         .context("Failed to remove symlink to non-existent folder")?;
-                } else if actual_src.exists() && actual_dest.exists() &&
-                    !util::is_symlink_to(actual_dest, actual_src) {
+                } else if actual_src.exists()
+                    && actual_dest.exists()
+                    && !util::is_symlink_to(actual_dest, actual_src)
+                {
                     log::info!("Refreshing {} link to correct profile", type_);
                     util::remove_symlink(actual_dest)
                         .context("Failed to remove symlink to incorrect profile")?;
@@ -262,24 +266,21 @@ impl Manager {
                     .context("Failed to remove old content folder")?;
             }
             if dest_aoc.exists() {
-                util::remove_dir_all(&dest_aoc)
-                    .context("Failed to remove old dlc folder")?;
+                util::remove_dir_all(&dest_aoc).context("Failed to remove old dlc folder")?;
             }
             match config.method {
                 DeployMethod::Copy => {
                     log::info!("Deploying by copy");
                     util::copy_dir(&src_content, &dest_content)
                         .context("Failed to copy content folder")?;
-                    util::copy_dir(&src_aoc, &dest_aoc)
-                        .context("Failed to copy dlc folder")?;
-                },
+                    util::copy_dir(&src_aoc, &dest_aoc).context("Failed to copy dlc folder")?;
+                }
                 DeployMethod::HardLink => {
                     log::info!("Deploying by hard links");
                     util::hardlink_dir(&src_content, &dest_content)
                         .context("Failed to copy content folder")?;
-                    util::hardlink_dir(&src_aoc, &dest_aoc)
-                        .context("Failed to copy dlc folder")?;
-                },
+                    util::hardlink_dir(&src_aoc, &dest_aoc).context("Failed to copy dlc folder")?;
+                }
                 DeployMethod::Symlink => unsafe { std::hint::unreachable_unchecked() },
             };
             /*
@@ -479,8 +480,7 @@ impl Manager {
             .settings
             .upgrade()
             .context("YIKES, the settings manager is gone")?;
-        let settings = settings.try_read()
-            .context("Could not read settings")?;
+        let settings = settings.try_read().context("Could not read settings")?;
         let dump = settings
             .dump()
             .context("No dump available for current platform")?;
@@ -509,7 +509,10 @@ impl Manager {
             ModUnpacker::new(
                 dump,
                 endian,
-                settings.platform_config().context("No config for platform")?.language,
+                settings
+                    .platform_config()
+                    .context("No config for platform")?
+                    .language,
                 mods,
                 out_dir.clone(),
             )
@@ -531,7 +534,10 @@ impl Manager {
             ModUnpacker::new(
                 dump,
                 endian,
-                settings.platform_config().context("No config for platform")?.language,
+                settings
+                    .platform_config()
+                    .context("No config for platform")?
+                    .language,
                 mods,
                 out_dir.clone(),
             )

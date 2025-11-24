@@ -45,13 +45,11 @@ impl BnpConverter {
                             .get_data(path.split("//").last().context("Bad drop diff")?)
                             .ok()
                             .and_then(|res| {
-                                res.as_mergeable().and_then(|m| {
-                                    match m {
-                                        uk_content::resource::MergeableResource::DropTable(d) => {
-                                            Some(d.clone())
-                                        }
-                                        _ => None,
+                                res.as_mergeable().and_then(|m| match m {
+                                    uk_content::resource::MergeableResource::DropTable(d) => {
+                                        Some(d.clone())
                                     }
+                                    _ => None,
                                 })
                             })
                     } else {

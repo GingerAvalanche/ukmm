@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
 use itertools::Itertools;
-use roead::byml::{map, Byml};
+use roead::byml::{Byml, map};
 use serde::{Deserialize, Serialize};
 
-use crate::{prelude::*, util::DeleteVec, Result, UKError};
+use crate::{Result, UKError, prelude::*, util::DeleteVec};
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 
@@ -71,20 +71,18 @@ impl From<StatusEffectValues> for Byml {
     fn from(val: StatusEffectValues) -> Self {
         match val {
             StatusEffectValues::Special => Byml::Array(vec![map!("special" => Byml::Bool(true))]),
-            StatusEffectValues::Normal(values) => {
-                Byml::Array(vec![
-                    map!(
-                        "special" => Byml::Bool(false)
-                    ),
-                    map!(
-                        "values" => values
-                            .into_iter()
-                            .sorted_by(|a, b| Ord::cmp(&a.0, &b.0))
-                            .map(|(_, v)| map!("val" => Byml::Float(v)))
-                            .collect::<Byml>()
-                    ),
-                ])
-            }
+            StatusEffectValues::Normal(values) => Byml::Array(vec![
+                map!(
+                    "special" => Byml::Bool(false)
+                ),
+                map!(
+                    "values" => values
+                        .into_iter()
+                        .sorted_by(|a, b| Ord::cmp(&a.0, &b.0))
+                        .map(|(_, v)| map!("val" => Byml::Float(v)))
+                        .collect::<Byml>()
+                ),
+            ]),
         }
     }
 }

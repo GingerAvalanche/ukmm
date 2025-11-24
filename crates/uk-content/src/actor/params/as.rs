@@ -7,10 +7,10 @@ use uk_content_derive::ParamData;
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::ParameterResource,
     prelude::*,
     util::{self, IteratorExt},
-    Result, UKError,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, ParamData)]
@@ -37,9 +37,9 @@ pub struct ElementParams {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 
 pub struct Element {
-    pub params:   ElementParams,
+    pub params: ElementParams,
     pub children: Option<BTreeMap<usize, Element>>,
-    pub extend:   Option<ParameterList>,
+    pub extend: Option<ParameterList>,
 }
 
 impl Element {
@@ -48,7 +48,7 @@ impl Element {
         // is confirmed to exist.
         let element_list = unsafe { pio.list("Elements").unwrap_unchecked() };
         Ok(Self {
-            params:   list
+            params: list
                 .object("Parameters")
                 .ok_or(UKError::MissingAampKey("AS node missing parameters", None))?
                 .try_into()?,
@@ -77,7 +77,7 @@ impl Element {
                         .collect::<Result<_>>()
                 })
                 .transpose()?,
-            extend:   list.list("Extend").cloned(),
+            extend: list.list("Extend").cloned(),
         })
     }
 }
@@ -85,7 +85,7 @@ impl Element {
 impl Mergeable for Element {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            params:   other.params.clone(),
+            params: other.params.clone(),
             children: other.children.as_ref().map(|other_children| {
                 self.children
                     .as_ref()
@@ -107,7 +107,7 @@ impl Mergeable for Element {
                     })
                     .unwrap_or_else(|| other_children.clone())
             }),
-            extend:   other.extend.as_ref().map(|other_extend| {
+            extend: other.extend.as_ref().map(|other_extend| {
                 self.extend
                     .as_ref()
                     .map(|self_extend| util::diff_plist(self_extend, other_extend))
@@ -118,7 +118,7 @@ impl Mergeable for Element {
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            params:   diff.params.clone(),
+            params: diff.params.clone(),
             children: diff.children.as_ref().map(|diff_children| {
                 self.children
                     .as_ref()
@@ -136,7 +136,7 @@ impl Mergeable for Element {
                     })
                     .unwrap_or_else(|| diff_children.clone())
             }),
-            extend:   diff.extend.as_ref().map(|diff_extend| {
+            extend: diff.extend.as_ref().map(|diff_extend| {
                 self.extend
                     .as_ref()
                     .map(|self_extend| util::merge_plist(self_extend, diff_extend))

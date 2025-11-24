@@ -6,8 +6,8 @@ use super::*;
 
 #[derive(Debug)]
 pub struct MetaInputModal {
-    meta:   Option<Meta>,
-    path:   Option<PathBuf>,
+    meta: Option<Meta>,
+    path: Option<PathBuf>,
     sender: Sender<Message>,
 }
 
@@ -33,7 +33,8 @@ impl MetaInputModal {
     pub fn open(&mut self, path: PathBuf, platform: Platform) {
         self.meta = Some(Meta {
             api: env!("CARGO_PKG_VERSION").into(),
-            name: path.file_stem()
+            name: path
+                .file_stem()
                 .expect("Filepath has no file?")
                 .to_string_lossy()
                 .replace("_", " ")
@@ -74,7 +75,7 @@ impl MetaInputModal {
                                 ui.selectable_value(
                                     &mut meta.category,
                                     *cat,
-                                    loc.get(cat.to_loc_str())
+                                    loc.get(cat.to_loc_str()),
                                 );
                             });
                         });
@@ -419,16 +420,16 @@ impl App {
                         ui.add_space(8.0);
                         ui.horizontal(|ui| {
                             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                if ui.icon_text_button(
-                                    loc.get("Generic_Apply"),
-                                    Icon::Check
-                                ).clicked() {
+                                if ui
+                                    .icon_text_button(loc.get("Generic_Apply"), Icon::Check)
+                                    .clicked()
+                                {
                                     self.do_update(Message::Apply);
                                 }
-                                if ui.icon_text_button(
-                                    loc.get("Generic_Cancel"),
-                                    Icon::Cancel
-                                ).clicked() {
+                                if ui
+                                    .icon_text_button(loc.get("Generic_Cancel"), Icon::Cancel)
+                                    .clicked()
+                                {
                                     self.do_update(Message::ResetMods(None));
                                 }
                             });

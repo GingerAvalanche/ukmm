@@ -26,9 +26,9 @@ use std::{
 
 use anyhow_ext::{Context, Result};
 use eframe::{
+    NativeOptions,
     egui::{IconData, InnerResponse},
     epaint::text::TextWrapping,
-    NativeOptions,
 };
 use egui_notify::Toast;
 use flume::{Receiver, Sender};
@@ -46,12 +46,12 @@ use uk_manager::{
     mods::{LookupMod, Mod},
     settings::{Platform, Settings},
 };
-use uk_mod::{pack::sanitise, Manifest, Meta, ModPlatform};
+use uk_mod::{Manifest, Meta, ModPlatform, pack::sanitise};
 pub use uk_ui::visuals;
 use uk_ui::{
     egui::{
-        self, epaint::Margin, text::LayoutJob, Align, Align2, ComboBox, Frame, Id, Label, LayerId,
-        Layout, RichText, Spinner, TextStyle, Ui, UiStackInfo, Vec2, ViewportBuilder,
+        self, Align, Align2, ComboBox, Frame, Id, Label, LayerId, Layout, RichText, Spinner,
+        TextStyle, Ui, UiStackInfo, Vec2, ViewportBuilder, epaint::Margin, text::LayoutJob,
     },
     egui_dock::{DockArea, DockState, NodeIndex},
     ext::UiExt,
@@ -62,7 +62,8 @@ use uk_util::OptionResultExt;
 use self::{package::ModPackerBuilder, tasks::VersionResponse};
 use crate::gui::modals::MetaInputModal;
 
-pub static LOCALIZATION: LazyLock<RwLock<Localization>> = std::sync::LazyLock::new(|| Localization::from(LocLang::English).into());
+pub static LOCALIZATION: LazyLock<RwLock<Localization>> =
+    std::sync::LazyLock::new(|| Localization::from(LocLang::English).into());
 
 pub trait Component {
     type Message;
@@ -123,19 +124,15 @@ impl Sort {
             Sort::Name => {
                 Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| a.meta.name.cmp(&b.meta.name))
             }
-            Sort::Category => {
-                Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| {
-                    a.meta.category.u8().cmp(&b.meta.category.u8())
-                })
-            }
-            Sort::Version => {
-                Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| {
-                    a.meta
-                        .version
-                        .partial_cmp(&b.meta.version)
-                        .unwrap_or(std::cmp::Ordering::Equal)
-                })
-            }
+            Sort::Category => Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| {
+                a.meta.category.u8().cmp(&b.meta.category.u8())
+            }),
+            Sort::Version => Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| {
+                a.meta
+                    .version
+                    .partial_cmp(&b.meta.version)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            }),
             Sort::Priority => Box::new(|&(a, _), &(b, _)| a.cmp(&b)),
         }
     }
@@ -418,17 +415,15 @@ impl App {
             let response = match std::panic::catch_unwind(|| task(core.clone())) {
                 Ok(Ok(msg)) => msg,
                 Ok(Err(e)) => Message::Error(e),
-                Err(e) => {
-                    Message::Error(anyhow::format_err!(
-                        "{}",
-                        e.downcast::<String>().unwrap_or_else(|_| {
-                            Box::new(
-                                "An unknown error occured, check the log for possible details."
-                                    .to_string(),
-                            )
-                        })
-                    ))
-                }
+                Err(e) => Message::Error(anyhow::format_err!(
+                    "{}",
+                    e.downcast::<String>().unwrap_or_else(|_| {
+                        Box::new(
+                            "An unknown error occured, check the log for possible details."
+                                .to_string(),
+                        )
+                    })
+                )),
             };
             if let Some(d) = core.settings().dump() {
                 d.clear_cache()
@@ -510,8 +505,8 @@ pub fn main() -> Result<(), eframe::Error> {
                 icon: Some(
                     IconData {
                         height: 256,
-                        width:  256,
-                        rgba:   image::load_from_memory(include_bytes!("../assets/ukmm.png"))
+                        width: 256,
+                        rgba: image::load_from_memory(include_bytes!("../assets/ukmm.png"))
                             .unwrap()
                             .to_rgba8()
                             .into_vec(),

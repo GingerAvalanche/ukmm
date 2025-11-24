@@ -20,15 +20,15 @@ use uk_manager::{
     util::get_temp_file,
 };
 use uk_mod::{
-    pack::{sanitise, ModPacker},
-    unpack::{ModReader, ModUnpacker},
     Manifest, Meta,
+    pack::{ModPacker, sanitise},
+    unpack::{ModReader, ModUnpacker},
 };
 use uk_reader::ResourceReader;
 use uk_util::PathExt;
 
-use super::{package::ModPackerBuilder, util::response, Message};
-use crate::{gui::LOCALIZATION, INTERFACE};
+use super::{Message, package::ModPackerBuilder, util::response};
+use crate::{INTERFACE, gui::LOCALIZATION};
 
 mod handlers;
 
@@ -87,10 +87,8 @@ pub fn open_mod(core: &Manager, path: &Path, meta: Option<Meta>) -> Result<Messa
         .extension()
         .and_then(|e| e.to_str())
         .map(|e| e.to_lowercase() == "bnp")
-        .unwrap_or(false) ||
-       path
-        .join("info.json")
-        .exists()
+        .unwrap_or(false)
+        || path.join("info.json").exists()
     {
         let mod_ = convert_bnp(core, path).context("Failed to convert BNP to UKMM mod")?;
         return Ok(Message::HandleMod(Mod::from_reader(
@@ -217,9 +215,8 @@ pub fn dev_update_mods(core: &Manager, mods: Vec<Mod>) -> Result<Message> {
         log::info!("Updating {}…", mod_.meta.name.as_str());
         let loc = LOCALIZATION.read();
         let message = loc.get("Mod_Update_Folder");
-        let vars = std::collections::HashMap::from(
-            [("mod_name".to_string(), mod_.meta.name.to_string())]
-        );
+        let vars =
+            std::collections::HashMap::from([("mod_name".to_string(), mod_.meta.name.to_string())]);
         if let Some(folder) = rfd::FileDialog::new()
             .set_title(message.format(&vars)?)
             .pick_folder()
@@ -300,10 +297,7 @@ pub fn parse_meta(file: PathBuf) -> Result<Message> {
 
 pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
     let portable = path.join("portable");
-    let settings_path = if let Some(path) = portable
-        .join("settings.xml")
-        .exists_then()
-    {
+    let settings_path = if let Some(path) = portable.join("settings.xml").exists_then() {
         path
     } else {
         #[cfg(windows)]
@@ -348,9 +342,7 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
                 })
                 .flatten()
         })
-        .or_else(|| {
-            portable.join("mlc01").exists_then()
-        })
+        .or_else(|| portable.join("mlc01").exists_then())
         .or_else(|| {
             #[cfg(windows)]
             {
@@ -388,9 +380,9 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
                 .join("Cemu")
                 .join("title_list_cache.xml")
                 .exists_then()
-        })
-    {
-        let title_list = fs::read_to_string(&cache).context("Failed to open Cemu title cache file")?;
+        }) {
+        let title_list =
+            fs::read_to_string(&cache).context("Failed to open Cemu title cache file")?;
         let title_tree = roxmltree::Document::parse(&title_list)
             .context("Failed to parse Cemu title cache file: invalid XML")?;
         let mut base_folder: Option<PathBuf> = None;
@@ -398,26 +390,31 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
         let mut dlc_folder: Option<PathBuf> = None;
         let mut wua_file: Option<PathBuf> = None;
         let mut encrypted = false;
-        title_tree.descendants()
+        title_tree
+            .descendants()
             .filter_map(|n| {
                 if n.tag_name().name() == "title" {
                     let title_id = n.attribute("titleId").expect("invalid title");
                     if !REGIONS.contains(&&title_id[8..]) {
                         None
                     } else {
-                        let format = n.descendants()
+                        let format = n
+                            .descendants()
                             .find(|c| c.tag_name().name() == "format")
                             .expect("invalid title")
                             .text()
                             .expect("invalid format")
                             .parse::<u32>()
                             .expect("invalid format");
-                        if let Ok(path) = PathBuf::from(n.descendants()
-                            .find(|c| c.tag_name().name() == "path")
-                            .expect("invalid title")
-                            .text()
-                            .expect("invalid path"))
-                            .canonicalize() {
+                        if let Ok(path) = PathBuf::from(
+                            n.descendants()
+                                .find(|c| c.tag_name().name() == "path")
+                                .expect("invalid title")
+                                .text()
+                                .expect("invalid path"),
+                        )
+                        .canonicalize()
+                        {
                             Some((&title_id[..8], format, path))
                         } else {
                             None
@@ -426,17 +423,14 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
                 } else {
                     None
                 }
-            }).for_each(|(dump_type, format, path)| {
-                match (dump_type, format) {
-                    ("00050000", 1) => base_folder = Some(path.join("content")),
-                    ("0005000c", 1) => dlc_folder = Some(path.join("content").join("0010")),
-                    ("0005000e", 1) => update_folder = Some(path.join("content")),
-                    ("00050000", 4) |
-                    ("0005000c", 4) |
-                    ("0005000e", 4) => encrypted = true,
-                    ("00050000", 3) => wua_file = Some(path),
-                    _ => {},
-                }
+            })
+            .for_each(|(dump_type, format, path)| match (dump_type, format) {
+                ("00050000", 1) => base_folder = Some(path.join("content")),
+                ("0005000c", 1) => dlc_folder = Some(path.join("content").join("0010")),
+                ("0005000e", 1) => update_folder = Some(path.join("content")),
+                ("00050000", 4) | ("0005000c", 4) | ("0005000e", 4) => encrypted = true,
+                ("00050000", 3) => wua_file = Some(path),
+                _ => {}
             });
         (base_folder, update_folder, dlc_folder, wua_file, encrypted)
     } else {
@@ -444,13 +438,10 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
             .as_ref()
             .map(|mlc_path| {
                 let title_path = mlc_path.join("usr/title");
-                let base_folder = if let Some(base_folder_path) = REGIONS
-                    .iter()
-                    .find_map(|r| {
-                        let path = title_path.join(jstr!("00050000/{r}/content"));
-                        path.exists().then_some(path)
-                    }
-                ) {
+                let base_folder = if let Some(base_folder_path) = REGIONS.iter().find_map(|r| {
+                    let path = title_path.join(jstr!("00050000/{r}/content"));
+                    path.exists().then_some(path)
+                }) {
                     Some(base_folder_path)
                 } else {
                     std::fs::read_to_string(&settings_path)
@@ -459,7 +450,7 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
                         .find_map(|line| {
                             let line = line.trim();
                             if line.starts_with("<path>") && line.contains("U-King.rpx") {
-                                Some(PathBuf::from(&line[6..line.len()-23]).join("content"))
+                                Some(PathBuf::from(&line[6..line.len() - 23]).join("content"))
                             } else {
                                 None
                             }
@@ -484,10 +475,7 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
             "Could not find unpacked game dump from Cemu settings."
         });
     }
-    let gfx_folder = if let Some(path) = portable
-        .join("graphicPacks")
-        .exists_then()
-    {
+    let gfx_folder = if let Some(path) = portable.join("graphicPacks").exists_then() {
         path
     } else {
         #[cfg(windows)]
@@ -514,16 +502,17 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
     let mut settings = core.settings_mut();
     settings.current_mode = Platform::WiiU;
     let dump = if let Some(path) = wua {
-        Arc::new(ResourceReader::from_zarchive(path)
-            .context("Failed to validate game dump")?)
+        Arc::new(ResourceReader::from_zarchive(path).context("Failed to validate game dump")?)
     } else {
-        Arc::new(ResourceReader::from_unpacked_dirs(
-            base.as_ref(),
-            update,
-            dlc,
-            uk_content::prelude::Endian::Big,
+        Arc::new(
+            ResourceReader::from_unpacked_dirs(
+                base.as_ref(),
+                update,
+                dlc,
+                uk_content::prelude::Endian::Big,
+            )
+            .context("Failed to validate game dump")?,
         )
-        .context("Failed to validate game dump")?)
     };
     #[cfg(windows)]
     let exe = path
@@ -560,7 +549,11 @@ pub fn import_cemu_settings(core: &Manager, path: &Path) -> Result<Message> {
                 .to_string();
             #[cfg(windows)]
             {
-                Some(format!("{} -g \"{}\"", exe.unwrap(), rpx.strip_prefix(r"\\?\").unwrap()))
+                Some(format!(
+                    "{} -g \"{}\"",
+                    exe.unwrap(),
+                    rpx.strip_prefix(r"\\?\").unwrap()
+                ))
             }
             #[cfg(not(windows))]
             {
@@ -647,20 +640,16 @@ pub fn migrate_bcml(core: Arc<Manager>) -> Result<Message> {
                 profile: "Default".into(),
                 deploy_config: bcml_settings
                     .export_dir
-                    .map(|export_dir| {
-                        DeployConfig {
-                            output: export_dir,
-                            cemu_rules: bcml_settings.cemu_dir.is_some(),
-                            ..Default::default()
-                        }
+                    .map(|export_dir| DeployConfig {
+                        output: export_dir,
+                        cemu_rules: bcml_settings.cemu_dir.is_some(),
+                        ..Default::default()
                     })
                     .or_else(|| {
-                        bcml_settings.cemu_dir.map(|cemu_dir| {
-                            DeployConfig {
-                                output: cemu_dir.join("graphicPacks/BreathOfTheWild_UKMM"),
-                                cemu_rules: true,
-                                ..Default::default()
-                            }
+                        bcml_settings.cemu_dir.map(|cemu_dir| DeployConfig {
+                            output: cemu_dir.join("graphicPacks/BreathOfTheWild_UKMM"),
+                            cemu_rules: true,
+                            ..Default::default()
                         })
                     }),
                 dump: Arc::new(ResourceReader::from_unpacked_dirs(
@@ -687,11 +676,9 @@ pub fn migrate_bcml(core: Arc<Manager>) -> Result<Message> {
             settings.switch_config = Some(PlatformSettings {
                 language: bcml_settings.lang,
                 profile: "Default".into(),
-                deploy_config: bcml_settings.export_dir_nx.map(|export_dir| {
-                    DeployConfig {
-                        output: export_dir,
-                        ..Default::default()
-                    }
+                deploy_config: bcml_settings.export_dir_nx.map(|export_dir| DeployConfig {
+                    output: export_dir,
+                    ..Default::default()
                 }),
                 dump: Arc::new(ResourceReader::from_unpacked_dirs(
                     Some(game_dir),
@@ -792,11 +779,9 @@ pub fn get_releases(core: Arc<Manager>, sender: flume::Sender<Message>) {
                     std::cmp::Ordering::Greater => {
                         sender.send(Message::OfferUpdate(release.clone())).unwrap()
                     }
-                    std::cmp::Ordering::Less => {
-                        sender
-                            .send(Message::SetChangelog(release.description()))
-                            .unwrap()
-                    }
+                    std::cmp::Ordering::Less => sender
+                        .send(Message::SetChangelog(release.description()))
+                        .unwrap(),
                     _ => (),
                 }
             }
@@ -815,11 +800,7 @@ pub fn do_update(version: VersionResponse) -> Result<Message> {
     let asset_name = "ukmm-x86_64-apple-darwin.tar.xz";
     #[cfg(target_os = "linux")]
     let asset_name = "ukmm-x86_64-unknown-linux-gnu.tar.xz";
-    #[cfg(not(any(
-        target_os = "windows",
-        target_os = "macos",
-        target_os = "linux"
-    )))]
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     let asset_name = "";
     let asset = version
         .assets

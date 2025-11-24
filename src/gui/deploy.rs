@@ -31,11 +31,9 @@ impl App {
                             // ui.add_space(8.);
                             ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
                                 ui.label(if config.auto {
-                                    RichText::new(loc.get("Generic_Yes"))
-                                        .color(visuals::GREEN)
+                                    RichText::new(loc.get("Generic_Yes")).color(visuals::GREEN)
                                 } else {
-                                    RichText::new(loc.get("Generic_No"))
-                                        .color(visuals::RED)
+                                    RichText::new(loc.get("Generic_No")).color(visuals::RED)
                                 });
                             })
                         });
@@ -86,16 +84,17 @@ impl App {
                                             let cmd = util::default_shell();
                                             #[cfg(windows)]
                                             let user_arg = shlex::split(exe)
-                                                    .map(|v| {
-                                                        [
-                                                            "&".to_string(),
-                                                            v.iter()
-                                                                .map(|s| format!("'{}'", s))
-                                                                .collect::<Vec<_>>()
-                                                                .join(" "),
-                                                        ].join(" ")
-                                                    })
-                                                    .unwrap_or_default();
+                                                .map(|v| {
+                                                    [
+                                                        "&".to_string(),
+                                                        v.iter()
+                                                            .map(|s| format!("'{}'", s))
+                                                            .collect::<Vec<_>>()
+                                                            .join(" "),
+                                                    ]
+                                                    .join(" ")
+                                                })
+                                                .unwrap_or_default();
                                             #[cfg(not(windows))]
                                             let user_arg = exe;
                                             let (shell, arg) = (&cmd.0, &cmd.1);
@@ -105,18 +104,13 @@ impl App {
                                                 .spawn();
                                         }
                                     }
-                                    if ui
-                                        .add(egui::Button::new(loc.get("Tab_Deploy")))
-                                        .clicked()
-                                    {
+                                    if ui.add(egui::Button::new(loc.get("Tab_Deploy"))).clicked() {
                                         self.do_update(super::Message::Deploy);
                                     }
                                     if config.auto && self.core.deploy_manager().pending() {
                                         ui.label(
-                                            RichText::new(
-                                                loc.get("Deploy_Auto_Failed")
-                                            )
-                                            .color(visuals::RED),
+                                            RichText::new(loc.get("Deploy_Auto_Failed"))
+                                                .color(visuals::RED),
                                         );
                                     }
                                 });

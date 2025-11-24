@@ -6,11 +6,11 @@ use strfmt::Format;
 use uk_content::util::{HashMap, HashSet};
 use uk_manager::mods::Profile as ProfileData;
 use uk_ui::{
-    egui::{self, text::LayoutJob, Layout, TextStyle},
+    egui::{self, Layout, TextStyle, text::LayoutJob},
     icons::IconButtonExt,
 };
 
-use super::{App, Message, LOCALIZATION};
+use super::{App, LOCALIZATION, Message};
 
 #[derive(Debug, Default)]
 pub struct ProfileManagerState {
@@ -123,9 +123,10 @@ impl ProfileManagerState {
                         }
                         if ui.button(loc.get("Generic_Delete")).clicked() {
                             let message = loc.get("Profile_Delete_Confirmation");
-                            let vars = std::collections::HashMap::from(
-                                [("profile_name".to_string(), name.to_string())]
-                            );
+                            let vars = std::collections::HashMap::from([(
+                                "profile_name".to_string(),
+                                name.to_string(),
+                            )]);
                             app.do_update(Message::Confirm(
                                 Message::DeleteProfile(name.to_string()).into(),
                                 message.format(&vars).unwrap(),
@@ -202,11 +203,7 @@ impl ProfileManagerState {
     pub fn all_assigned_mod_hashes(&self) -> HashSet<usize> {
         self.profiles
             .values()
-            .map(|m| m.mods()
-                .keys()
-                .copied()
-                .collect::<Vec<_>>()
-            )
+            .map(|m| m.mods().keys().copied().collect::<Vec<_>>())
             .flatten()
             .collect()
     }

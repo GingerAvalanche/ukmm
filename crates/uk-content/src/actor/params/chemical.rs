@@ -9,15 +9,16 @@ use serde::{Deserialize, Serialize};
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::{InfoSource, ParameterResource},
     prelude::*,
-    util, Result, UKError,
+    util,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 
 pub struct ChemicalBody {
-    pub shape:   ParameterObject,
+    pub shape: ParameterObject,
     pub rigid_c: ParameterObject,
 }
 
@@ -25,7 +26,7 @@ pub struct ChemicalBody {
 
 pub struct Chemical {
     pub unknown: Option<usize>,
-    pub body:    BTreeMap<usize, ChemicalBody>,
+    pub body: BTreeMap<usize, ChemicalBody>,
 }
 
 impl TryFrom<ParameterIO> for Chemical {
@@ -73,24 +74,27 @@ impl TryFrom<&ParameterIO> for Chemical {
                 .get(&3635073347)
                 .map(|x| x.as_int())
                 .transpose()?,
-            body:    (0..shape_num)
+            body: (0..shape_num)
                 .map(|i| -> Result<(usize, ChemicalBody)> {
-                    Ok((i, ChemicalBody {
-                        rigid_c: chemical_body
-                            .object(&format!("rigid_c_{:02}", i))
-                            .ok_or(UKError::MissingAampKey(
-                                "Chemical missing rigid_c entry",
-                                None,
-                            ))
-                            .cloned()?,
-                        shape:   chemical_body
-                            .object(&format!("shape_{:02}", i))
-                            .ok_or(UKError::MissingAampKey(
-                                "Chemical missing shape entry",
-                                None,
-                            ))
-                            .cloned()?,
-                    }))
+                    Ok((
+                        i,
+                        ChemicalBody {
+                            rigid_c: chemical_body
+                                .object(&format!("rigid_c_{:02}", i))
+                                .ok_or(UKError::MissingAampKey(
+                                    "Chemical missing rigid_c entry",
+                                    None,
+                                ))
+                                .cloned()?,
+                            shape: chemical_body
+                                .object(&format!("shape_{:02}", i))
+                                .ok_or(UKError::MissingAampKey(
+                                    "Chemical missing shape entry",
+                                    None,
+                                ))
+                                .cloned()?,
+                        },
+                    ))
                 })
                 .collect::<Result<_>>()?,
         })
@@ -136,8 +140,8 @@ impl From<Chemical> for ParameterIO {
                 ),
                 ..Default::default()
             },
-            data_type:  "xml".into(),
-            version:    0,
+            data_type: "xml".into(),
+            version: 0,
         }
     }
 }
@@ -150,14 +154,14 @@ impl Mergeable for Chemical {
             } else {
                 None
             },
-            body:    util::simple_index_diff(&self.body, &other.body),
+            body: util::simple_index_diff(&self.body, &other.body),
         }
     }
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
             unknown: diff.unknown.or(self.unknown),
-            body:    util::simple_index_merge(&self.body, &diff.body),
+            body: util::simple_index_merge(&self.body, &diff.body),
         }
     }
 }

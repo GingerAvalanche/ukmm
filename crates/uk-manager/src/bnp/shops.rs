@@ -2,7 +2,7 @@ use anyhow_ext::{Context, Result};
 use fs_err as fs;
 use rayon::prelude::*;
 use roead::{
-    aamp::{get_default_name_table, ParameterIO, ParameterList, ParameterListing},
+    aamp::{ParameterIO, ParameterList, ParameterListing, get_default_name_table},
     sarc::{Sarc, SarcWriter},
     yaz0::compress_if,
 };
@@ -12,7 +12,7 @@ use uk_content::{
     util::merge_plist,
 };
 
-use super::{parse_aamp_diff, AampDiffEntry, BnpConverter};
+use super::{AampDiffEntry, BnpConverter, parse_aamp_diff};
 
 fn update_name_table(list: &ParameterList, base: Option<&ShopData>) {
     let name_table = get_default_name_table();
@@ -78,18 +78,21 @@ fn merge(data: &mut ShopData, diff: &ParameterList) -> Result<()> {
                     }
                 }
                 None => {
-                    base.insert(name, ShopItem {
-                        sort: i as i32,
-                        num: num.context("Shop diff item missing num")?.as_int()?,
-                        adjust_price: adjust
-                            .context("Shop diff item missing adjust_price")?
-                            .as_int()?,
-                        look_get_flag: look_get
-                            .context("Shop diff item missing look_get_flag")?
-                            .as_bool()?,
-                        amount: amount.context("Shop diff item missing amount")?.as_int()?,
-                        delete: false,
-                    });
+                    base.insert(
+                        name,
+                        ShopItem {
+                            sort: i as i32,
+                            num: num.context("Shop diff item missing num")?.as_int()?,
+                            adjust_price: adjust
+                                .context("Shop diff item missing adjust_price")?
+                                .as_int()?,
+                            look_get_flag: look_get
+                                .context("Shop diff item missing look_get_flag")?
+                                .as_bool()?,
+                            amount: amount.context("Shop diff item missing amount")?.as_int()?,
+                            delete: false,
+                        },
+                    );
                 }
             }
         }

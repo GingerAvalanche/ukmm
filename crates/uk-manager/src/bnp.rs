@@ -538,11 +538,16 @@ pub fn convert_bnp(core: &crate::core::Manager, path: &Path) -> Result<PathBuf> 
         ModPacker::parse_rules(tempdir.join("rules.txt")).context("Failed to parse BNP metadata")?
     };
     let name = meta.name.clone();
-    let new_mod = ModPacker::new(tempdir, tempfile.as_path(), Some(meta), vec![
-        core.settings()
-            .dump()
-            .context("No dump for current platform")?,
-    ])
+    let new_mod = ModPacker::new(
+        tempdir,
+        tempfile.as_path(),
+        Some(meta),
+        vec![
+            core.settings()
+                .dump()
+                .context("No dump for current platform")?,
+        ],
+    )
     .with_context(|| format!("Failed to package converted BNP for mod {}", name))?;
     new_mod.pack()
 }

@@ -6,10 +6,10 @@ use crate::{ROMError, Result};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Unpacked {
-    host_path:   PathBuf,
+    host_path: PathBuf,
     content_dir: Option<PathBuf>,
-    update_dir:  Option<PathBuf>,
-    aoc_dir:     Option<PathBuf>,
+    update_dir: Option<PathBuf>,
+    aoc_dir: Option<PathBuf>,
 }
 
 impl Unpacked {
@@ -87,7 +87,7 @@ impl Unpacked {
         }
 
         Ok(Self {
-            host_path:   unsafe {
+            host_path: unsafe {
                 common_path(
                     content_dir
                         .as_ref()
@@ -106,8 +106,8 @@ impl Unpacked {
                 .unwrap_unchecked()
             },
             content_dir: content_dir.map(|content| content.to_path_buf()),
-            update_dir:  update_dir.map(|update| update.to_path_buf()),
-            aoc_dir:     aoc_dir.map(|aoc| aoc.to_path_buf()),
+            update_dir: update_dir.map(|update| update.to_path_buf()),
+            aoc_dir: aoc_dir.map(|aoc| aoc.to_path_buf()),
         })
     }
 }
@@ -130,7 +130,7 @@ impl super::ResourceLoader for Unpacked {
             })
             .unwrap_or_else(|| Err(ROMError::MissingDumpDir("Base", self.host_path.clone())))
     }
-    
+
     fn get_update_file_data(&self, name: &Path) -> Result<Vec<u8>> {
         self.update_dir
             .as_ref()

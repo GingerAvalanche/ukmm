@@ -2,11 +2,11 @@
 
 use std::{env, fs, path::PathBuf, process::Command};
 
-use anyhow::{anyhow, Context, Result};
-#[cfg(target_os = "windows")]
-use winreg::enums::*;
+use anyhow::{Context, Result, anyhow};
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
+#[cfg(target_os = "windows")]
+use winreg::enums::*;
 
 pub fn register_handlers() -> Result<()> {
     #[cfg(target_os = "windows")]

@@ -4,10 +4,10 @@ use fs_err as fs;
 use serde::{Deserialize, Serialize};
 use uk_ui::{
     egui::{self, Button, Key, Ui, Vec2},
-    icons::{get_icon, Icon, IconButtonExt},
+    icons::{Icon, IconButtonExt, get_icon},
 };
 
-use super::{App, FocusedPane, Message, LOCALIZATION};
+use super::{App, FocusedPane, LOCALIZATION, Message};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct FilePickerState {
@@ -92,7 +92,7 @@ impl<'de> Deserialize<'de> for FilePickerState {
         }
         #[doc(hidden)]
         struct __Visitor<'de> {
-            marker:   serde::__private::PhantomData<FilePickerState>,
+            marker: serde::__private::PhantomData<FilePickerState>,
             lifetime: serde::__private::PhantomData<&'de ()>,
         }
         impl<'de> serde::de::Visitor<'de> for __Visitor<'de> {
@@ -236,7 +236,7 @@ impl<'de> Deserialize<'de> for FilePickerState {
             "FilePickerState",
             FIELDS,
             __Visitor {
-                marker:   serde::__private::PhantomData::<FilePickerState>,
+                marker: serde::__private::PhantomData::<FilePickerState>,
                 lifetime: serde::__private::PhantomData,
             },
         )

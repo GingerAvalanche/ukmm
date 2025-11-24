@@ -4,16 +4,16 @@ use serde::{Deserialize, Serialize};
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::ParameterResource,
     prelude::*,
     util::{self, DeleteMap},
-    Result, UKError,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 
 pub struct AttClientList {
-    pub att_pos:     ParameterObject,
+    pub att_pos: ParameterObject,
     pub att_clients: DeleteMap<String64, String64>,
 }
 
@@ -22,7 +22,7 @@ impl TryFrom<&ParameterIO> for AttClientList {
 
     fn try_from(pio: &ParameterIO) -> Result<Self> {
         Ok(Self {
-            att_pos:     pio
+            att_pos: pio
                 .object("AttPos")
                 .ok_or(UKError::MissingAampKey(
                     "Attention client list missing AttPos",
@@ -80,14 +80,14 @@ impl From<AttClientList> for ParameterIO {
 impl Mergeable for AttClientList {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            att_pos:     util::diff_pobj(&self.att_pos, &other.att_pos),
+            att_pos: util::diff_pobj(&self.att_pos, &other.att_pos),
             att_clients: self.att_clients.diff(&other.att_clients),
         }
     }
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            att_pos:     util::merge_pobj(&self.att_pos, &diff.att_pos),
+            att_pos: util::merge_pobj(&self.att_pos, &diff.att_pos),
             att_clients: self.att_clients.merge(&diff.att_clients),
         }
     }

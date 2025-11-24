@@ -2,9 +2,10 @@ use std::sync::LazyLock;
 
 use color_hex::color_from_hex;
 use egui::{
+    Color32, FontFamily, LayerId, Mesh, Rect, Rounding, Stroke, Style, Ui, Visuals,
     epaint::{Margin, RectShape, Shadow, Tessellator},
     style::{Selection, Spacing, TextCursorStyle, WidgetVisuals, Widgets},
-    vec2, Color32, FontFamily, LayerId, Mesh, Rect, Rounding, Stroke, Style, Ui, Visuals,
+    vec2,
 };
 use egui_aesthetix::Aesthetix;
 use serde::{Deserialize, Serialize};
@@ -202,7 +203,7 @@ impl Theme {
                         },
                         selection: Selection {
                             bg_fill: BLUE.linear_multiply(0.667),
-                            stroke:  Stroke::new(1.0, Color32::WHITE),
+                            stroke: Stroke::new(1.0, Color32::WHITE),
                         },
                         hyperlink_color: BLUE,
                         faint_bg_color: hex_color!("#252729"),
@@ -213,15 +214,15 @@ impl Theme {
                         window_rounding: Rounding::same(4.0),
                         window_shadow: Shadow {
                             offset: egui::Vec2::new(0., 0.),
-                            blur:   5.,
+                            blur: 5.,
                             spread: 5.,
-                            color:  Color32::from_black_alpha(45),
+                            color: Color32::from_black_alpha(45),
                         },
                         popup_shadow: Shadow {
                             offset: egui::Vec2::new(0., 0.),
-                            blur:   5.,
+                            blur: 5.,
                             spread: 5.,
-                            color:  Color32::from_black_alpha(45),
+                            color: Color32::from_black_alpha(45),
                         },
                         window_fill: hex_color!("#1C1E1F"),
                         window_stroke: Stroke::NONE,
@@ -399,7 +400,7 @@ impl Theme {
                         combo_height: 200.0,
                         scroll: Default::default(),
                         indent_ends_with_horizontal_line: false,
-                        default_area_size: vec2(600.0, 400.0)
+                        default_area_size: vec2(600.0, 400.0),
                     },
                     ..Default::default()
                 });

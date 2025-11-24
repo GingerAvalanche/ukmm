@@ -1,21 +1,147 @@
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::OnceLock,
+};
+
 use anyhow::Context;
 use join_str::jstr;
+use roead::aamp::Name;
 use roead::{aamp::*, byml::Byml};
 use serde::{Deserialize, Serialize};
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::{InfoSource, ParameterResource},
     prelude::*,
     util::{DeleteMap, IteratorExt},
-    Result, UKError,
 };
 
 type RecipeTable = DeleteMap<String64, u8>;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RecipeKeyKind {
+    ItemName,
+    ItemNum,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct RecipeKeyMatch {
+    kind: RecipeKeyKind,
+    index: usize,
+}
+
+static RECIPE_KEY_MAP: OnceLock<HashMap<u32, RecipeKeyMatch>> = OnceLock::new();
+
+fn recipe_key_map() -> &'static HashMap<u32, RecipeKeyMatch> {
+    RECIPE_KEY_MAP.get_or_init(|| {
+        let mut map = HashMap::new();
+
+        fn insert_keys(map: &mut HashMap<u32, RecipeKeyMatch>, width: usize) {
+            for idx in 0..=999 {
+                let name = Name::from_str(format!("ItemName{idx:0width$}").as_str());
+                map.insert(
+                    name.hash(),
+                    RecipeKeyMatch {
+                        kind: RecipeKeyKind::ItemName,
+                        index: idx,
+                    },
+                );
+                let num = Name::from_str(format!("ItemNum{idx:0width$}").as_str());
+                map.insert(
+                    num.hash(),
+                    RecipeKeyMatch {
+                        kind: RecipeKeyKind::ItemNum,
+                        index: idx,
+                    },
+                );
+            }
+        }
+
+        insert_keys(&mut map, 2);
+        insert_keys(&mut map, 3);
+        map
+    })
+}
+
+fn identify_recipe_key(name: &Name) -> Option<RecipeKeyMatch> {
+    recipe_key_map().get(&name.hash()).copied()
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
 
 pub struct Recipe(pub DeleteMap<String64, RecipeTable>);
+
+fn parse_item_index(key: &str, prefix: &str) -> Option<usize> {
+    let suffix = key.strip_prefix(prefix)?;
+    let bytes = suffix.as_bytes();
+    let mut idx = bytes.len();
+    while idx > 0 && bytes[idx - 1].is_ascii_digit() {
+        idx -= 1;
+    }
+    if idx == bytes.len() {
+        return None;
+    }
+    suffix[idx..].parse().ok()
+}
+
+fn parse_recipe_count(param: &Parameter) -> Result<u8> {
+    let raw: i32 = param.as_int()?;
+    u8::try_from(raw).map_err(|_| {
+        UKError::OtherD(format!(
+            "Recipe item count {raw} exceeds supported range for recipe serialization"
+        ))
+    })
+}
+
+fn parse_recipe_table_from_keys(table: &ParameterObject) -> Result<Option<RecipeTable>> {
+    let mut entries: BTreeMap<usize, (Option<String64>, Option<u8>)> = BTreeMap::new();
+    for (key, value) in table.iter() {
+        let key_string = key.to_string();
+        if let Some(index) = parse_item_index(&key_string, "ItemName") {
+            entries.entry(index).or_insert_with(|| (None, None)).0 = Some(value.as_safe_string()?);
+            continue;
+        }
+        if let Some(index) = parse_item_index(&key_string, "ItemNum") {
+            entries.entry(index).or_insert_with(|| (None, None)).1 =
+                Some(parse_recipe_count(value)?);
+            continue;
+        }
+        if let Some(key_match) = identify_recipe_key(key) {
+            match key_match.kind {
+                RecipeKeyKind::ItemName => {
+                    entries
+                        .entry(key_match.index)
+                        .or_insert_with(|| (None, None))
+                        .0 = Some(value.as_safe_string()?);
+                }
+                RecipeKeyKind::ItemNum => {
+                    entries
+                        .entry(key_match.index)
+                        .or_insert_with(|| (None, None))
+                        .1 = Some(parse_recipe_count(value)?);
+                }
+            }
+        }
+    }
+
+    if entries.is_empty() {
+        return Ok(None);
+    }
+
+    let mut table_data = RecipeTable::with_capacity(entries.len());
+    for (index, (name, count)) in entries {
+        let name = name.ok_or_else(|| {
+            UKError::MissingAampKeyD(format!("Recipe missing item name at index {index:03}"))
+        })?;
+        let count = count.ok_or_else(|| {
+            UKError::MissingAampKeyD(format!("Recipe missing item count at index {index:03}"))
+        })?;
+        table_data.insert(name, count);
+    }
+
+    Ok(Some(table_data))
+}
 
 impl TryFrom<&ParameterIO> for Recipe {
     type Error = UKError;
@@ -51,6 +177,9 @@ impl TryFrom<&ParameterIO> for Recipe {
                     let table = pio.object(name.as_str()).ok_or_else(|| {
                         UKError::MissingAampKeyD(jstr!("Recipe missing table {&name}"))
                     })?;
+                    if let Some(entries) = parse_recipe_table_from_keys(table)? {
+                        return Ok((name, entries));
+                    }
                     let items_count = table
                         .get("ColumnNum")
                         .ok_or(UKError::MissingAampKey(
@@ -229,6 +358,8 @@ impl Resource for Recipe {
 #[allow(clippy::unwrap_used)]
 #[cfg(test)]
 mod tests {
+    use roead::aamp::{Name, Parameter, ParameterIO, ParameterObject};
+
     use crate::{actor::InfoSource, prelude::*};
 
     #[test]
@@ -330,5 +461,88 @@ mod tests {
             "content/Actor/Pack/Armor_151_Upper.sbactorpack//Actor/Recipe/Armor_151_Upper.brecipe",
         );
         assert!(super::Recipe::path_matches(path));
+    }
+
+    #[test]
+    fn zero_indexed_recipe() {
+        let header: ParameterObject = [
+            (String64::from("TableNum"), Parameter::I32(1)),
+            (
+                String64::from("Table01"),
+                Parameter::String64(Box::new(String64::from("Normal0"))),
+            ),
+        ]
+        .into_iter()
+        .collect();
+        let table: ParameterObject = [
+            (String64::from("ColumnNum"), Parameter::I32(2)),
+            (
+                String64::from("ItemName00"),
+                Parameter::String64(Box::new(String64::from("FirstItem"))),
+            ),
+            (String64::from("ItemNum00"), Parameter::I32(3)),
+            (
+                String64::from("ItemName01"),
+                Parameter::String64(Box::new(String64::from("SecondItem"))),
+            ),
+            (String64::from("ItemNum01"), Parameter::I32(1)),
+        ]
+        .into_iter()
+        .collect();
+        let pio = ParameterIO::new()
+            .with_object("Header", header)
+            .with_object("Normal0", table);
+        let recipe = super::Recipe::try_from(&pio).unwrap();
+        let table = recipe.0.get(String64::from("Normal0")).unwrap();
+        let mut iter = table.iter();
+        let (first_name, first_count) = iter.next().unwrap();
+        assert_eq!(first_name.as_str(), "FirstItem");
+        assert_eq!(*first_count, 3);
+        let (second_name, second_count) = iter.next().unwrap();
+        assert_eq!(second_name.as_str(), "SecondItem");
+        assert_eq!(*second_count, 1);
+    }
+
+    #[test]
+    fn hashed_recipe_keys() {
+        let header: ParameterObject = [
+            (String64::from("TableNum"), Parameter::I32(1)),
+            (
+                String64::from("Table01"),
+                Parameter::String64(Box::new(String64::from("Normal0"))),
+            ),
+        ]
+        .into_iter()
+        .collect();
+        let table: ParameterObject = [
+            (Name::from_str("ColumnNum"), Parameter::I32(2)),
+            (
+                Name::from_str("ItemName02"),
+                Parameter::String64(Box::new(String64::from("FirstItem"))),
+            ),
+            (Name::from_str("ItemNum02"), Parameter::I32(3)),
+            (
+                Name::from_str("ItemName101"),
+                Parameter::String64(Box::new(String64::from("SecondItem"))),
+            ),
+            (Name::from_str("ItemNum101"), Parameter::I32(1)),
+        ]
+        .into_iter()
+        .collect();
+        let pio = ParameterIO::new()
+            .with_object("Header", header)
+            .with_object("Normal0", table);
+        let recipe = super::Recipe::try_from(&pio).unwrap();
+        let table = recipe.0.get(String64::from("Normal0")).unwrap();
+        assert_eq!(table.len(), 2);
+        let mut values: Vec<_> = table
+            .iter()
+            .map(|(name, count)| (name.as_str().to_owned(), *count))
+            .collect();
+        values.sort_by(|a, b| a.0.cmp(&b.0));
+        assert_eq!(
+            values,
+            vec![("FirstItem".into(), 3), ("SecondItem".into(), 1)]
+        );
     }
 }

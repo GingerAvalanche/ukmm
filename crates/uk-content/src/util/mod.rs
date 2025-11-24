@@ -13,7 +13,7 @@ use roead::{
 
 pub fn diff_plist<P: ParameterListing + From<ParameterList>>(base: &P, other: &P) -> P {
     ParameterList {
-        lists:   other
+        lists: other
             .lists()
             .0
             .iter()
@@ -72,7 +72,7 @@ pub fn merge_plist<P: ParameterListing + From<ParameterList>>(base: &P, diff: &P
             }
             new
         },
-        lists:   {
+        lists: {
             let mut new = base.lists().clone();
             for (k, v) in &diff.lists().0 {
                 if !new.0.contains_key(k) {
@@ -276,12 +276,10 @@ impl ParameterExt for Parameter {
             Self::String64(s) => Ok(s.as_str().into()),
             Self::String256(s) => Ok(s.as_str().into()),
             Self::StringRef(s) => Ok(s.as_str().into()),
-            _ => {
-                Err(roead::Error::TypeError(
-                    format!("{self:#?}").into(),
-                    "a string",
-                ))
-            }
+            _ => Err(roead::Error::TypeError(
+                format!("{self:#?}").into(),
+                "a string",
+            )),
         }
     }
 }
@@ -320,10 +318,10 @@ where
 impl<T> IteratorExt for T where T: Iterator {}
 
 pub struct NamedEnumerate<'a, I> {
-    iter:    I,
-    count:   usize,
-    name:    &'a str,
-    buffer:  Vec<u8>,
+    iter: I,
+    count: usize,
+    name: &'a str,
+    buffer: Vec<u8>,
     padding: Option<(&'static str, Vec<u8>)>,
 }
 

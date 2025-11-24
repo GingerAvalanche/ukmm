@@ -5,10 +5,10 @@ use uk_content_derive::ParamData;
 use uk_util::OptionResultExt;
 
 use crate::{
+    Result, UKError,
     actor::ParameterResource,
     prelude::*,
     util::{self, DeleteMap},
-    Result, UKError,
 };
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, ParamData)]
@@ -25,8 +25,8 @@ pub struct BodyParam {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 
 pub struct RagdollConfigList {
-    pub common_data:     ParameterObject,
-    pub impulse_params:  ParameterList,
+    pub common_data: ParameterObject,
+    pub impulse_params: ParameterList,
     pub body_param_list: DeleteMap<String64, BodyParam>,
 }
 
@@ -35,14 +35,14 @@ impl TryFrom<&ParameterIO> for RagdollConfigList {
 
     fn try_from(pio: &ParameterIO) -> Result<Self> {
         Ok(Self {
-            common_data:     pio
+            common_data: pio
                 .object("CommonData")
                 .ok_or(UKError::MissingAampKey(
                     "Ragdoll config list missing common data",
                     None,
                 ))?
                 .clone(),
-            impulse_params:  pio
+            impulse_params: pio
                 .list("ImpulseParamList")
                 .ok_or(UKError::MissingAampKey(
                     "Ragdoll config list missing impulse param list",
@@ -97,16 +97,16 @@ impl From<RagdollConfigList> for ParameterIO {
 impl Mergeable for RagdollConfigList {
     fn diff(&self, other: &Self) -> Self {
         Self {
-            common_data:     util::diff_pobj(&self.common_data, &other.common_data),
-            impulse_params:  util::diff_plist(&self.impulse_params, &other.impulse_params),
+            common_data: util::diff_pobj(&self.common_data, &other.common_data),
+            impulse_params: util::diff_plist(&self.impulse_params, &other.impulse_params),
             body_param_list: self.body_param_list.diff(&other.body_param_list),
         }
     }
 
     fn merge(&self, diff: &Self) -> Self {
         Self {
-            common_data:     util::merge_pobj(&self.common_data, &diff.common_data),
-            impulse_params:  util::merge_plist(&self.impulse_params, &diff.impulse_params),
+            common_data: util::merge_pobj(&self.common_data, &diff.common_data),
+            impulse_params: util::merge_plist(&self.impulse_params, &diff.impulse_params),
             body_param_list: self.body_param_list.merge(&diff.body_param_list),
         }
     }

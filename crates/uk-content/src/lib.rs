@@ -207,15 +207,15 @@ pub mod prelude {
                             &self.$field.param_root,
                             &other.$field.param_root,
                         ),
-                        version:    self.$field.version,
-                        data_type:  self.$field.data_type.clone(),
+                        version: self.$field.version,
+                        data_type: self.$field.data_type.clone(),
                     })
                 }
 
                 fn merge(&self, diff: &Self) -> Self {
                     Self(ParameterIO {
-                        data_type:  self.$field.data_type.clone(),
-                        version:    self.$field.version,
+                        data_type: self.$field.data_type.clone(),
+                        version: self.$field.version,
                         param_root: crate::util::merge_plist(
                             &self.$field.param_root,
                             &diff.$field.param_root,
@@ -229,16 +229,16 @@ pub mod prelude {
     impl Mergeable for roead::aamp::ParameterIO {
         fn diff(&self, other: &Self) -> Self {
             Self {
-                data_type:  self.data_type.clone(),
-                version:    self.version,
+                data_type: self.data_type.clone(),
+                version: self.version,
                 param_root: crate::util::diff_plist(&self.param_root, &other.param_root),
             }
         }
 
         fn merge(&self, diff: &Self) -> Self {
             Self {
-                data_type:  self.data_type.clone(),
-                version:    self.version,
+                data_type: self.data_type.clone(),
+                version: self.version,
                 param_root: crate::util::merge_plist(&self.param_root, &diff.param_root),
             }
         }
