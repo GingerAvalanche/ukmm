@@ -57,6 +57,9 @@ be obvious from the Info tab.
   Fixes various merge errors in BoneControl, ActorLink, and other files
 - Fixes a rare error where some files with no header in their format would be
   recognized as byml files instead of binary
+- Fixed egui assertion failures in debug mode caused by invalid widget sizes
+  (NaN or negative values). All size values passed to egui are now validated
+  to ensure they are finite and non-negative
 
 ## [0.16.0] - 2025-01-27
 
