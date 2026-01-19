@@ -57,6 +57,7 @@ be obvious from the Info tab.
 - Reordered bnp map conversions, so modifications apply to the right map instances
 - Made sure DeleteSets actually deleted the things marked for deletion. Whoops!
   Fixes various merge errors in BoneControl, ActorLink, and other files
+- Fixed various deployment errors, reimplemented partial deployment
 - Fixes a rare error where some files with no header in their format would be
   recognized as byml files instead of binary
 
