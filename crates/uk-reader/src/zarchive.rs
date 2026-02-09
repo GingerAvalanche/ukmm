@@ -50,7 +50,7 @@ impl ZArchive {
 impl super::ResourceLoader for ZArchive {
     fn get_base_file_data(&self, name: &Path) -> Result<Vec<u8>> {
         self.archive.read_file(self.content_dir.join(name)).ok_or_else(|| {
-            crate::ROMError::FileNotFound(
+            ROMError::FileNotFound(
                 name.to_string_lossy().into(),
                 self.host_path.clone(),
             )
@@ -59,7 +59,7 @@ impl super::ResourceLoader for ZArchive {
 
     fn get_update_file_data(&self, name: &Path) -> Result<Vec<u8>> {
         self.archive.read_file(self.update_dir.join(name)).ok_or_else(|| {
-            crate::ROMError::FileNotFound(
+            ROMError::FileNotFound(
                 name.to_string_lossy().into(),
                 self.host_path.clone(),
             )
@@ -71,14 +71,14 @@ impl super::ResourceLoader for ZArchive {
             .as_ref()
             .map(|dir| {
                 self.archive.read_file(dir.join(name)).ok_or_else(|| {
-                    crate::ROMError::FileNotFound(
+                    ROMError::FileNotFound(
                         name.to_string_lossy().into(),
                         self.host_path.clone(),
                     )
                 })
             })
             .unwrap_or_else(|| {
-                Err(crate::ROMError::MissingDumpDir(
+                Err(ROMError::MissingDumpDir(
                     "DLC",
                     self.host_path.clone(),
                 ))
@@ -194,7 +194,7 @@ mod de {
                     let host_path =
                         host_path.ok_or_else(|| serde::de::Error::missing_field("host_path"))?;
                     Ok(ZArchive {
-                        archive: Arc::new(::zarchive::reader::ZArchiveReader::open(&host_path)
+                        archive: Arc::new(zarchive::reader::ZArchiveReader::open(&host_path)
                             .map_err(serde::de::Error::custom)?),
                         content_dir,
                         update_dir,
