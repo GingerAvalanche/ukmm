@@ -229,7 +229,7 @@ impl App {
                         .iter()
                         .enumerate()
                         .filter(|(_, m)| self.selected.contains(m))
-                        .last()
+                        .next_back()
                 })
                 .flatten()
             {
