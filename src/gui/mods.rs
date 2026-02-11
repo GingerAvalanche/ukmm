@@ -173,7 +173,7 @@ impl App {
                             let width = header
                                 .col(|ui| {
                                     let is_current = self.sort.0 == sort;
-                                    let mut label = label.to_owned();
+                                    let mut label = label.into_owned();
                                     if is_current {
                                         if self.sort.1 {
                                             label += " ⏷";
